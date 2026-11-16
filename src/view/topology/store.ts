@@ -8,6 +8,8 @@ import type {
 	TopologyReply,
 } from "../../api/generated/types";
 
+import { sanitizeTopology } from "./model";
+
 export interface TopologyApi {
 	getTopology(): Promise<TopologyReply>;
 	getTopologyNode(request: TopologyNodeRequest): Promise<TopologyNodeReply>;
@@ -49,7 +51,7 @@ export class TopologyStore {
 		initial: TopologyReply | null = null,
 		error: string | null = null,
 	) {
-		this.snapshot = initial;
+		this.snapshot = initial ? sanitizeTopology(initial) : null;
 		this.error = error;
 		this.lastSuccess = initial ? new Date() : null;
 	}
@@ -76,7 +78,7 @@ export class TopologyStore {
 	private async runRefresh(hydrateOnly: boolean, focusNodeId?: string | null) {
 		try {
 			if (!hydrateOnly || !this.snapshot) {
-				const snapshot = await this.api.getTopology();
+				const snapshot = sanitizeTopology(await this.api.getTopology());
 				if (this.dead) return;
 				this.snapshot = snapshot;
 				this.epoch++;

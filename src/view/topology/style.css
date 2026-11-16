@@ -915,3 +915,22 @@
 		transition: none !important;
 	}
 }
+
+.fttr-topology .topo-graph-card:focus-visible {
+	outline: 3px solid var(--topo-blue);
+	outline-offset: 4px;
+}
+.fttr-topology .topo-dot.topo-success {
+	animation: topo-breathe 2.8s ease-in-out infinite;
+}
+@keyframes topo-breathe {
+	50% {
+		box-shadow: 0 0 0 5px color-mix(in srgb, var(--topo-green) 15%, transparent);
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.fttr-topology *,
+	.fttr-topology *:after {
+		animation: none !important;
+	}
+}

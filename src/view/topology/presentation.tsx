@@ -14,6 +14,7 @@ import {
 	getWifiSyncBadgeSpec,
 } from "../components/badge";
 import { formatUptime } from "../components/formatters";
+import { identityText } from "../components/status-model";
 import { TOPOLOGY_ICONS, type TopologyIconName } from "./icons";
 import { addressSummary, clientKey, linkFor, measurementAge, type Selection } from "./model";
 import type { ClientState, TopologyStore } from "./store";
@@ -47,13 +48,16 @@ export function nodeTone(node: TopologyNode, snapshot: TopologyReply): Tone {
 	if (snapshot.issues.some((issue) => issue.node_id === node.id)) return "danger";
 	const detail = node.detail;
 	if (detail.kind === "controller") return detail.fpga_status.toLowerCase() === "ready" ? "info" : "warning";
-	if (detail.registration === null) return "neutral";
+	if (detail.registration === null || ["o1_initial", "o2_standby", "o7_emergency_stop"].includes(detail.registration))
+		return "neutral";
 	if (detail.registration !== "o5_operation" || detail.business?.error) return "warning";
 	return detail.business?.phase === "verified" ? "success" : "info";
 }
 export function nodeState(node: TopologyNode): string {
 	if (node.detail.kind === "controller") return _("Controller");
 	if (node.detail.registration === null) return _("Binding only");
+	if (["o1_initial", "o2_standby", "o7_emergency_stop"].includes(node.detail.registration)) return _("Offline");
+	if (["o3_serial_number", "o4_ranging"].includes(node.detail.registration)) return _("Identifying");
 	return getRegistrationBadgeSpec(node.detail.registration).label;
 }
 function nodeStateTitle(node: TopologyNode): string | undefined {
@@ -90,7 +94,12 @@ export function nodeCard(node: TopologyNode, snapshot: TopologyReply): HTMLEleme
 			<div class="topo-card-head">
 				{deviceIcon(detail.kind === "controller" ? "controller" : "onu")}
 				<div class="topo-card-title">
-					<strong title={node.label}>{node.label}</strong>
+					<strong title={node.label}>
+						{identityText(node.label) ??
+							(detail.kind === "controller"
+								? _("Main gateway")
+								: `${_("Optical sub-gateway")} ${detail.onu_id ?? ""}`)}
+					</strong>
 					<small>
 						{detail.kind === "controller"
 							? _("Main gateway")

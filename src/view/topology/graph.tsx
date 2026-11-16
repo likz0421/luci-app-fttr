@@ -215,6 +215,11 @@ function buildNodeElement(
 		<div
 			class={`topo-graph-card topo-${tone} ${kindClass} ${selected ? "is-selected" : ""} ${dimmed ? "is-dimmed" : ""}`}
 			data-topo-id={id}
+			// biome-ignore lint/a11y/useSemanticElements: composite card contains semantic detail and is activated by Enter or Space.
+			role="button"
+			tabIndex={0}
+			aria-label={node?.label ?? client?.client.hostname ?? client?.client.mac ?? id}
+			aria-pressed={String(selected)}
 			style="width:100%;height:100%"
 		>
 			{node ? nodeCard(node, snapshot) : client ? clientCard(client.client) : null}
@@ -786,7 +791,7 @@ export function createTopologyGraph(
 				});
 			} else if (targetNode) {
 				const link = linkFor(snapshot, targetNode.id);
-				const isOffline = targetNode.detail.kind === "onu" && targetNode.detail.registration === null;
+				const isOffline = targetNode.detail.kind === "onu" && targetNode.detail.registration !== "o5_operation";
 				const rxText =
 					link?.onu_rx_power_dbm != null
 						? `${link.data_interface ? `${link.data_interface} · ` : ""}${num(link.onu_rx_power_dbm, "dBm", 1)}`
@@ -806,7 +811,7 @@ export function createTopologyGraph(
 						stroke: isSelected ? palette.selected : isOffline ? palette.edge : palette[tone],
 						strokeOpacity: isSelected ? 1 : isOffline ? 0.78 : 0.92,
 						lineWidth: isSelected ? 3.2 : 2.5,
-						lineDash: isOffline ? [6, 4] : 0,
+						lineDash: isOffline ? [6, 4] : [12, 2],
 						shadowColor: isSelected ? palette.selected : undefined,
 						shadowBlur: isSelected ? 8 : 0,
 						cursor: "pointer",
@@ -862,6 +867,16 @@ export function createTopologyGraph(
 		lastWidth = data.width;
 	};
 
+	const onCardKey = (event: KeyboardEvent) => {
+		if (event.key !== "Enter" && event.key !== " ") return;
+		const card = (event.target as Element | null)?.closest<HTMLElement>("[data-topo-id]");
+		const selection = card ? selectionLookup.get(card.dataset.topoId ?? "") : undefined;
+		if (selection) {
+			event.preventDefault();
+			onSelect(selection);
+		}
+	};
+	container.addEventListener("keydown", onCardKey);
 	const resizeTarget = container.parentElement ?? container;
 	const observer = new ResizeObserver(() => {
 		if (dead || !resizeTarget.clientWidth || !resizeTarget.clientHeight) return;
@@ -933,6 +948,7 @@ export function createTopologyGraph(
 			dead = true;
 			cancelPinchRaf();
 			observer.disconnect();
+			container.removeEventListener("keydown", onCardKey);
 			container.removeEventListener("pointerdown", onPointerDown);
 			container.removeEventListener("pointermove", onPointerMove);
 			container.removeEventListener("pointerup", endPan);

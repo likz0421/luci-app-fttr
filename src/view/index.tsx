@@ -1,23 +1,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { isPageHidden } from "../visibility";
-import {
-	getBusinessBadgeSpec,
-	getCwmpBadgeSpec,
-	getProvisioningBadgeSpec,
-	getRegistrationBadgeSpec,
-	getWifiSyncBadgeSpec,
-	updateBadge,
-} from "./components/badge";
+import { updateBadge } from "./components/badge";
 import badgeCss from "./components/badge.css?inline";
-import { formatBytes, formatFirmware, formatLinkSpeed, formatPackets, text } from "./components/formatters";
-import { showOnuDetails } from "./components/onu-details";
-import { confirmOnuPin } from "./components/onu-pin";
+import { createDeviceCards } from "./components/device-cards";
+import { formatBytes, formatLinkSpeed, formatPackets, text } from "./components/formatters";
 import { createOpticalControl } from "./components/optical-control";
+import { deviceState, pendingPorts, readPortConfiguration, visibleOnus } from "./components/status-model";
 import { ViewStyle } from "./components/view-style";
 import type { PlatformInfoReply } from "./contracts/api";
 import { getNetworkDevices, getPlatformInfo, getStatus } from "./contracts/api";
-import type { FttrStatus, NetworkDevices, SubGateway, SwitchPortStatus } from "./contracts/status";
+import type { FttrStatus, NetworkDevices } from "./contracts/status";
 import indexCss from "./index.css?inline";
 import tokensCss from "./styles/tokens.css?inline";
 
@@ -55,6 +48,9 @@ function createPortCard(number: number): PortCard {
 
 	const element = (
 		<div
+			// biome-ignore lint/a11y/useSemanticElements: composite card contains semantic detail and is activated by Enter or Space.
+			role="button"
+			tabIndex={0}
 			class="ifacebox fttr-port-card"
 			data-fttr-port={String(number)}
 			style="box-sizing:border-box;margin:0;cursor:pointer"
@@ -143,7 +139,7 @@ function createPortCard(number: number): PortCard {
 
 	element.addEventListener("mouseenter", () => {
 		const currentOnuId = element.getAttribute("data-active-onu-id");
-		if (currentOnuId) {
+		if (currentOnuId !== null) {
 			const targetRow = document.querySelector(`[data-fttr-onu-id="${currentOnuId}"]`);
 			targetRow?.classList.add("fttr-row-highlight");
 		}
@@ -157,16 +153,28 @@ function createPortCard(number: number): PortCard {
 
 	element.addEventListener("click", () => {
 		const currentOnuId = element.getAttribute("data-active-onu-id");
-		if (currentOnuId) {
+		if (currentOnuId !== null) {
 			const targetRow = document.querySelector(`[data-fttr-onu-id="${currentOnuId}"]`);
 			if (targetRow) {
-				targetRow.scrollIntoView({ behavior: "smooth", block: "nearest" });
+				targetRow.scrollIntoView({
+					behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+					block: "nearest",
+				});
+				(targetRow.querySelector("button") as HTMLButtonElement | null)?.focus({ preventScroll: true });
 				targetRow.classList.add("fttr-row-highlight");
 				window.setTimeout(() => targetRow.classList.remove("fttr-row-highlight"), 1500);
 			}
 		}
 	});
 
+	element.addEventListener("keydown", (event) => {
+		if (event.key === "Enter" || event.key === " ") {
+			event.preventDefault();
+			element.click();
+		}
+	});
+	element.addEventListener("focus", () => element.dispatchEvent(new MouseEvent("mouseenter")));
+	element.addEventListener("blur", () => element.dispatchEvent(new MouseEvent("mouseleave")));
 	return {
 		element,
 		update(status, devices) {
@@ -177,6 +185,11 @@ function createPortCard(number: number): PortCard {
 			const carrier = port?.carrier ?? device?.carrier ?? (device?.link?.speed !== undefined ? true : undefined);
 			const onu = (status.sub_gateways ?? []).find((item) => item.onu_id === port?.onu_id);
 			const connected = carrier === true;
+			element.setAttribute(
+				"aria-label",
+				`${ifname ?? `${_("Port")} ${number}`} · ${carrier === true ? _("Connected") : carrier === false ? _("Disconnected") : _("Status unavailable")}${onu ? ` · ONU ${onu.onu_id}` : ""}`,
+			);
+			element.setAttribute("aria-disabled", String(!onu));
 			const rxBytes = stats?.rx_bytes;
 			const txBytes = stats?.tx_bytes;
 
@@ -194,7 +207,7 @@ function createPortCard(number: number): PortCard {
 				element.classList.remove("port-up");
 			}
 
-			ifnameNode.textContent = text(ifname);
+			ifnameNode.textContent = ifname || `${_("Port")} ${number}`;
 			iconNode.setAttribute("src", `/luci-static/resources/icons/${connected ? "port_up.svg" : "port_down.svg"}`);
 			speedNode.textContent = connected
 				? device?.link?.speed !== undefined
@@ -202,7 +215,7 @@ function createPortCard(number: number): PortCard {
 					: _("Connected")
 				: carrier === false
 					? _("Disconnected")
-					: _("Unknown");
+					: _("Status unavailable");
 			speedNode.setAttribute(
 				"title",
 				_("速度：%s Mbit/s，双工：%s").format(text(device?.link?.speed), text(device?.link?.duplex)),
@@ -235,203 +248,6 @@ function createPortCard(number: number): PortCard {
 	};
 }
 
-interface OnuRow {
-	element: HTMLElement;
-	update(onu: SubGateway, pinning: FttrStatus["onu_pinning"], switchPorts: SwitchPortStatus[]): void;
-}
-
-function createOnuRow(onu: SubGateway, platform: PlatformInfoReply, onSaved: (status: FttrStatus) => void): OnuRow {
-	let current = onu;
-	let currentPinning: FttrStatus["onu_pinning"];
-	let currentPorts: SwitchPortStatus[] = [];
-	const pinButton = (
-		<button
-			type="button"
-			class="cbi-button cbi-button-neutral"
-			style="padding:0 .4em;min-height:1.5em;font-size:85%;margin-left:.5em"
-			onclick={() => confirmOnuPin(current, currentPinning, platform, onSaved)}
-		/>
-	) as HTMLButtonElement;
-	const onuIdNode = <span />;
-	const vendorNode = <span />;
-	const modelNode = <span />;
-	const serialNode = <code style="font-size:90%" />;
-	const registrationNode = <span class="fttr-badge" />;
-	const businessNode = <span class="fttr-badge" />;
-	const firmwareNode = <span style="font-size:90%" />;
-	const dataInterfaceNode = <code style="font-size:90%" />;
-	const cwmpNode = <span class="fttr-badge" />;
-	const provisioningNode = <span class="fttr-badge" />;
-	const wifiSyncNode = <span class="fttr-badge" />;
-
-	const element = (
-		<tr data-fttr-onu-id={String(onu.onu_id)}>
-			<td>
-				{onuIdNode}
-				{pinButton}
-			</td>
-			<td>{vendorNode}</td>
-			<td>{modelNode}</td>
-			<td>{serialNode}</td>
-			<td>{registrationNode}</td>
-			<td>{businessNode}</td>
-			<td>{firmwareNode}</td>
-			<td>{dataInterfaceNode}</td>
-			<td>{cwmpNode}</td>
-			<td>{provisioningNode}</td>
-			<td>{wifiSyncNode}</td>
-			<td style="text-align:right">
-				<button type="button" class="cbi-button cbi-button-neutral" onclick={() => showOnuDetails(current)}>
-					{_("Details")}
-				</button>
-			</td>
-		</tr>
-	);
-
-	element.addEventListener("mouseenter", () => {
-		const ifname = current.data_path?.interface;
-		const port = currentPorts.find((item) => item.interface === ifname);
-		if (port) document.querySelector(`[data-fttr-port="${port.port}"]`)?.classList.add("fttr-port-highlight");
-	});
-
-	element.addEventListener("mouseleave", () => {
-		document.querySelectorAll(".fttr-port-highlight").forEach((el) => {
-			el.classList.remove("fttr-port-highlight");
-		});
-	});
-
-	const row: OnuRow = {
-		element,
-		update(value, pinning, switchPorts) {
-			current = value;
-			currentPinning = pinning;
-			currentPorts = switchPorts;
-			const serial = value.serial_number.toUpperCase();
-			const desired = pinning?.desired[serial];
-			pinButton.textContent = desired !== undefined ? _("Unpin") : _("Pin");
-			pinButton.hidden = !pinning;
-			pinButton.disabled = !L.hasViewPermission();
-			pinButton.title =
-				desired !== pinning?.active[serial]
-					? _("Pending restart")
-					: desired !== undefined
-						? _("Fixed interface")
-						: _("Pin interface");
-			element.setAttribute("data-fttr-onu-id", String(value.onu_id));
-			onuIdNode.textContent = String(value.onu_id);
-			vendorNode.textContent = text(value.vendor);
-			modelNode.textContent = text(value.identity?.equipment_id ?? value.model);
-			serialNode.textContent = text(value.serial_number);
-
-			const regSpec = getRegistrationBadgeSpec(value.state);
-			updateBadge(registrationNode, regSpec.tone, regSpec.label, regSpec.title);
-
-			const busSpec = getBusinessBadgeSpec(value.business_status);
-			updateBadge(businessNode, busSpec.tone, busSpec.label, busSpec.title);
-
-			const fw = formatFirmware(value.firmware_version || value.identity?.software_images?.join("; "));
-			firmwareNode.textContent = fw.display;
-			if (fw.full) {
-				firmwareNode.setAttribute("title", fw.full);
-			} else {
-				firmwareNode.removeAttribute("title");
-			}
-
-			dataInterfaceNode.textContent = text(value.data_path?.interface);
-
-			const cwmpSpec = getCwmpBadgeSpec(value.management);
-			updateBadge(cwmpNode, cwmpSpec.tone, cwmpSpec.label, cwmpSpec.title);
-
-			const provSpec = getProvisioningBadgeSpec(value.provisioning);
-			updateBadge(provisioningNode, provSpec.tone, provSpec.label, provSpec.title);
-
-			const wifiSpec = getWifiSyncBadgeSpec(value.wifi_sync);
-			updateBadge(wifiSyncNode, wifiSpec.tone, wifiSpec.label, wifiSpec.title);
-		},
-	};
-	row.update(onu, undefined, []);
-	return row;
-}
-
-interface OnuTable {
-	element: HTMLElement;
-	update(onus: SubGateway[], pinning: FttrStatus["onu_pinning"], switchPorts: SwitchPortStatus[]): void;
-}
-
-function createOnuTable(
-	onus: SubGateway[],
-	platform: PlatformInfoReply,
-	onSaved: (status: FttrStatus) => void,
-): OnuTable {
-	const rows = new Map<number, OnuRow>();
-	for (const onu of onus) rows.set(onu.onu_id, createOnuRow(onu, platform, onSaved));
-	const emptyRow = (
-		<tr>
-			<td colSpan={12}>{_("No registered sub-gateways.")}</td>
-		</tr>
-	);
-	let showingEmpty = onus.length === 0;
-	const body = <tbody>{showingEmpty ? emptyRow : [...rows.values()].map((row) => row.element)}</tbody>;
-	const element = (
-		<div class="table-wrapper">
-			<table class="table">
-				<thead>
-					<tr>
-						<th>{_("ONU ID")}</th>
-						<th>{_("Vendor")}</th>
-						<th>{_("Model")}</th>
-						<th>{_("Optical serial")}</th>
-						<th>{_("Registration")}</th>
-						<th>{_("Business")}</th>
-						<th>{_("Firmware")}</th>
-						<th>{_("Data interface")}</th>
-						<th>{_("CWMP")}</th>
-						<th>{_("Synchronization")}</th>
-						<th>{_("Wi-Fi sync")}</th>
-						<th style="text-align:right">{_("Details")}</th>
-					</tr>
-				</thead>
-				{body}
-			</table>
-		</div>
-	);
-
-	return {
-		element,
-		update(nextOnus, pinning, switchPorts) {
-			const nextIds = new Set(nextOnus.map((onu) => onu.onu_id));
-			for (const [onuId, row] of rows) {
-				if (!nextIds.has(onuId)) {
-					row.element.remove();
-					rows.delete(onuId);
-				}
-			}
-
-			if (nextOnus.length === 0) {
-				if (!showingEmpty) body.append(emptyRow);
-				showingEmpty = true;
-				return;
-			}
-
-			if (showingEmpty) {
-				emptyRow.remove();
-				showingEmpty = false;
-			}
-
-			for (const [index, onu] of nextOnus.entries()) {
-				let row = rows.get(onu.onu_id);
-				if (!row) {
-					row = createOnuRow(onu, platform, onSaved);
-					rows.set(onu.onu_id, row);
-				}
-				row.update(onu, pinning, switchPorts);
-				const current = body.children.item(index);
-				if (current !== row.element) body.insertBefore(row.element, current);
-			}
-		},
-	};
-}
-
 interface StatusView {
 	element: HTMLElement;
 	update(status: FttrStatus, devices: NetworkDevices): void;
@@ -445,18 +261,17 @@ function createStatusView(
 ): StatusView {
 	const initialOptical = initialStatus.optical_transceiver ?? {};
 	let currentDevices = initialDevices;
-	const onuTable = createOnuTable(initialStatus.sub_gateways ?? [], platform, (status) =>
-		update(status, currentDevices),
-	);
+	const onuCards = createDeviceCards(platform, (status) => update(status, currentDevices));
 	const ports = new Map<number, PortCard>();
 	const portsGrid = <div class="fttr-ports-grid" />;
 	const noPortsNode = <p>{_("No downstream ports are reported by the selected platform.")}</p>;
 
+	const provisioningUnavailable = <span hidden>{_("Provisioning status unavailable")}</span>;
 	const provisioningStatusNode = <span class="fttr-badge" />;
 	const provisioningModeNode = <span class="fttr-badge fttr-badge-info" />;
 	const provisioningRevNode = <code style="font-size:90%" />;
 	const provisioningErrorNode = <span class="fttr-badge fttr-badge-danger" style="margin-left:.5em" />;
-	const provisioningNode = (
+	const provisioningContents = (
 		<div
 			data-provisioning-summary="true"
 			style="display:flex;align-items:center;flex-wrap:wrap;gap:0.75em;margin-top:.25em;margin-bottom:1.2em;font-size:92%"
@@ -477,6 +292,22 @@ function createStatusView(
 		</div>
 	);
 
+	const provisioningNode = (
+		<div>
+			{provisioningUnavailable}
+			{provisioningContents}
+		</div>
+	);
+	const onlineCount = <strong />;
+	const offlineCount = <strong />;
+	const identifyingCount = <strong />;
+	const runningCount = <strong />;
+	const configuredCount = <span />;
+	const pendingNode = <span class="fttr-badge fttr-badge-warning" hidden />;
+	const sampledNode = <span />;
+	const txPower = <strong />;
+	const temperature = <strong />;
+	const opticalDetail = <small />;
 	const fpgaNode = <span class="fttr-badge" />;
 	const opticalNode = <span>{text(initialOptical.model)}</span>;
 	const cdrNode = <span class="fttr-badge" />;
@@ -494,34 +325,90 @@ function createStatusView(
 	const element = (
 		<div class="cbi-map fttr-overview">
 			<ViewStyle styles={[tokensCss, badgeCss, indexCss]} />
-			<h2>{_("FTTR overview")}</h2>
+			<header class="fttr-overview-heading">
+				<div>
+					<p class="fttr-eyebrow">{_("Optical network")}</p>
+					<h2>{_("FTTR overview")}</h2>
+					<p>{_("Registration, optical signal and synchronization at a glance.")}</p>
+				</div>
+				<div class="fttr-overview-actions">
+					<a class="cbi-button cbi-button-action" href={L.url("admin", "network", "fttr", "topology")}>
+						{_("Explore topology")}
+					</a>
+					<a class="cbi-button cbi-button-neutral" href={L.url("admin", "network", "fttr", "config")}>
+						{_("Configure FTTR")}
+					</a>
+					<small>{sampledNode}</small>
+				</div>
+			</header>
+			<div class="fttr-summary-grid">
+				<div data-tone="success">
+					<span>{_("Online sub-gateways")}</span>
+					{onlineCount}
+					<small>{_("O5 optical registration")}</small>
+				</div>
+				<div data-tone="neutral">
+					<span>{_("Offline sub-gateways")}</span>
+					{offlineCount}
+					<small>{_("Known optical identities")}</small>
+				</div>
+				<div data-tone="info">
+					<span>{_("Identifying")}</span>
+					{identifyingCount}
+					<small>{_("Registration in progress")}</small>
+				</div>
+				<a href={L.url("admin", "network", "fttr", "config")}>
+					<span>{_("Running interfaces")}</span>
+					{runningCount}
+					<small>{configuredCount}</small>
+					{pendingNode}
+				</a>
+			</div>
 			{staleNotice}
 			{opticalControl.element}
 			{provisioningNode}
 			{pinningNode}
-			<div class="cbi-section">
-				<h3>{_("Controller")}</h3>
-				<table class="table">
-					<tbody>
-						<tr>
-							<th style="width:15%">{_("FPGA status")}</th>
-							<td style="width:35%">{fpgaNode}</td>
-							<th style="width:15%">{_("CDR lock")}</th>
-							<td style="width:35%">{cdrNode}</td>
-						</tr>
-						<tr>
-							<th>{_("Optical module")}</th>
-							<td colSpan={3}>{opticalNode}</td>
-						</tr>
-					</tbody>
-				</table>
-			</div>
+			<section class="cbi-section fttr-controller">
+				<div>
+					<h3>{_("Controller")}</h3>
+					<div class="fttr-controller-states">
+						<span>
+							{_("FPGA status")} {fpgaNode}
+						</span>
+						<span>
+							{_("CDR lock")} {cdrNode}
+						</span>
+					</div>
+					<p>
+						{_("Optical module")} · {opticalNode}
+					</p>
+				</div>
+				<div class="fttr-controller-measure">
+					<span>{_("Module Tx")}</span>
+					{txPower}
+				</div>
+				<div class="fttr-controller-measure">
+					<span>{_("Temperature")}</span>
+					{temperature}
+				</div>
+				{opticalDetail}
+			</section>
 			<div class="cbi-section">
 				<h3>{_("Sub-gateways")}</h3>
-				{onuTable.element}
+				<p class="fttr-section-note">
+					{_(
+						"Optical registration and management availability are independent. Open a device for detailed diagnostics.",
+					)}
+				</p>
+				{onuCards.element}
 			</div>
 			<div class="cbi-section">
 				<h3>{_("Downstream ports")}</h3>
+				<p class="fttr-section-note">
+					{_(
+						"Actual running interfaces. Saved count changes take effect only after a device reboot; interface names and connected devices remain unchanged until then.",
+					)}
+				</p>
 				{noPortsNode}
 				{portsGrid}
 			</div>
@@ -533,6 +420,28 @@ function createStatusView(
 		const optical = status.optical_transceiver;
 		const provisioning = status.provisioning;
 		const pinning = status.onu_pinning;
+		const onus = visibleOnus(status.sub_gateways ?? []);
+		onlineCount.textContent = String(onus.filter((onu) => deviceState(onu) === "online").length);
+		offlineCount.textContent = String(onus.filter((onu) => deviceState(onu) === "offline").length);
+		identifyingCount.textContent = String(onus.filter((onu) => deviceState(onu) === "identifying").length);
+		const config = readPortConfiguration();
+		const running = new Set(status.switch_ports.map((port) => port.interface)).size;
+		runningCount.textContent = String(running);
+		configuredCount.textContent = `${_("Configured")}: ${config.enabled ? config.count : _("Disabled")}`;
+		pendingNode.hidden = !pendingPorts(config, running);
+		pendingNode.textContent = _("Pending device reboot");
+		sampledNode.textContent = `${_("Last successful refresh")} · ${new Date().toLocaleTimeString()}`;
+		const measured = (value: number | null, unit: string) =>
+			value == null || !Number.isFinite(value) ? _("Not reported") : `${value.toFixed(2)} ${unit}`;
+		txPower.textContent = measured(optical.tx_power_dbm, "dBm");
+		temperature.textContent = measured(optical.temperature_celsius, "°C");
+		opticalDetail.textContent = [optical.measurements.tx_power_dbm, optical.measurements.temperature_celsius]
+			.map((e) =>
+				e
+					? `${e.source}${e.age_seconds == null ? "" : ` · ${Math.round(e.age_seconds)} s`}${e.reason ? ` · ${e.reason}` : ""}`
+					: _("Measurement source not reported"),
+			)
+			.join(" / ");
 		pinningNode.textContent = pinning
 			? [
 					pinning.allocation_blocked ? _("ONU allocation blocked by invalid startup configuration.") : "",
@@ -544,6 +453,8 @@ function createStatusView(
 			: "";
 		pinningNode.hidden = !pinningNode.textContent;
 
+		provisioningContents.hidden = !provisioning;
+		provisioningUnavailable.hidden = Boolean(provisioning);
 		if (provisioning) {
 			updateBadge(
 				provisioningStatusNode,
@@ -559,8 +470,6 @@ function createStatusView(
 				provisioningErrorNode.style.display = "none";
 			}
 			provisioningNode.style.display = "";
-		} else {
-			provisioningNode.textContent = _("Provisioning status unavailable");
 		}
 
 		if (status.fpga_status === "ready") {
@@ -581,7 +490,7 @@ function createStatusView(
 			updateBadge(cdrNode, "warning", _("Unlocked"));
 		}
 
-		onuTable.update(status.sub_gateways ?? [], status.onu_pinning, status.switch_ports ?? []);
+		onuCards.update(onus, status.onu_pinning);
 		const currentPorts = new Set<number>();
 		for (const [index, portStatus] of (status.switch_ports ?? []).entries()) {
 			if (currentPorts.has(portStatus.port)) continue;
@@ -621,6 +530,7 @@ let lastSuccess = Date.now();
 
 export const main = view.extend({
 	async load(): Promise<{ status: FttrStatus; devices: NetworkDevices; platform: PlatformInfoReply }> {
+		await L.uci.load("fttr");
 		const [status, deviceResult, platform] = await Promise.all([
 			getStatus(),
 			getNetworkDevices().catch((error) => {
@@ -632,6 +542,7 @@ export const main = view.extend({
 		return { status, devices: deviceResult, platform };
 	},
 	render(data: { status: FttrStatus; devices: NetworkDevices; platform: PlatformInfoReply }): HTMLElement {
+		lastSuccess = Date.now();
 		pageView = createStatusView(data.status, data.devices, data.platform);
 		pageRoot = pageView.element;
 		poll.add(async () => {

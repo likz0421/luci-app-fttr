@@ -2,6 +2,35 @@
 // UI-only derivations. Backend IDs, relations and binding states are authoritative.
 import type { TopologyClient, TopologyLink, TopologyNode, TopologyReply } from "../../api/generated/types";
 
+import { identityText } from "../components/status-model";
+
+export function sanitizeTopology(snapshot: TopologyReply): TopologyReply {
+	const ids = new Set<string>();
+	const serials = new Set<string>();
+	const nodes = snapshot.nodes.filter((node) => {
+		if (ids.has(node.id)) return false;
+		const d = node.detail;
+		if (d.kind === "onu") {
+			const serial = identityText(d.serial_number)?.toUpperCase();
+			const observed = ["o3_serial_number", "o4_ranging", "o5_operation", "o6_intermittent_lods"].includes(
+				d.registration ?? "",
+			);
+			if (
+				!serial &&
+				!identityText(d.identity?.equipment_id) &&
+				!observed &&
+				!identityText(d.extensions.hl202?.mac)
+			)
+				return false;
+			if (serial && serials.has(serial)) return false;
+			if (serial) serials.add(serial);
+		}
+		ids.add(node.id);
+		return true;
+	});
+	return { ...snapshot, nodes, links: snapshot.links.filter((link) => ids.has(link.source) && ids.has(link.target)) };
+}
+
 export const CONTROLLER_ID = "controller";
 export type Selection = { kind: "node"; id: string } | { kind: "client"; parent: string; id: string };
 

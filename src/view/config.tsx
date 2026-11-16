@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
+import badgeCss from "./components/badge.css?inline";
+import { ViewStyle } from "./components/view-style";
 import { addAuth } from "./config/auth";
 import { addBasic } from "./config/basic";
 import { addDevices } from "./config/devices";
+import { addPorts } from "./config/ports";
 import { openRecovery } from "./config/recovery";
 import { saveConfiguration } from "./config/save";
 import { addServices } from "./config/services";
@@ -11,6 +14,8 @@ import { checkConfig, getPlatformInfo, getStatus, reloadConfig, restartService }
 import { type Capabilities, getCapabilities } from "./contracts/capabilities";
 import type { ConfigCheck } from "./contracts/provisioning";
 import type { FttrStatus, SubGateway } from "./contracts/status";
+import indexCss from "./index.css?inline";
+import tokensCss from "./styles/tokens.css?inline";
 
 const view = L.view;
 const uci = L.uci;
@@ -37,6 +42,7 @@ type InitialCheck = {
 	pinning?: FttrStatus["onu_pinning"];
 	capabilities: Capabilities;
 	platform: PlatformInfoReply;
+	status: FttrStatus | null;
 };
 const main = view.extend({
 	async load(): Promise<InitialCheck> {
@@ -45,6 +51,11 @@ const main = view.extend({
 			throw new Error(_("This page is not supported by the installed FTTR build."));
 		}
 		await uci.load("fttr");
+		if (!uci.get("fttr", "ports")) {
+			uci.add("fttr", "ports", "ports");
+			uci.set("fttr", "ports", "enabled", "1");
+			uci.set("fttr", "ports", "count", "16");
+		}
 		if (!uci.sections("fttr", "provisioning").length) uci.add("fttr", "provisioning", "provisioning");
 		if (!uci.sections("fttr", "management").length) uci.add("fttr", "management", "management");
 		if (!uci.sections("fttr", "omci_auth").length) {
@@ -62,6 +73,7 @@ const main = view.extend({
 			pinning: "onu_pinning" in status ? status.onu_pinning : undefined,
 			capabilities,
 			platform,
+			status: "error" in status ? null : status,
 		};
 	},
 	render(initialCheck: InitialCheck): Promise<Node> {
@@ -72,6 +84,7 @@ const main = view.extend({
 
 		const globalId = uci.sections("fttr", "provisioning")[0]?.[".name"] ?? "provisioning";
 		addBasic(section, _("Basic"), globalId);
+		addPorts(section, initialCheck.status);
 		addAuth(section);
 		addDevices(
 			section,
@@ -163,7 +176,12 @@ const main = view.extend({
 		section.tab("diagnostics", _("Configuration diagnostics"));
 		const diagnostics = section.taboption("diagnostics", form.DummyValue, "_diagnostics", "");
 		diagnostics.render = () => Promise.resolve(actions);
-		return map.render();
+		return map.render().then((content) => (
+			<div class="fttr-overview">
+				<ViewStyle styles={[tokensCss, badgeCss, indexCss]} />
+				{content}
+			</div>
+		));
 	},
 });
 
