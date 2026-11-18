@@ -36,7 +36,10 @@ export interface PortConfiguration {
 }
 export function portConfiguration(enabled: unknown, count: unknown): PortConfiguration {
 	const number = Number(count);
-	return { enabled: enabled !== "0", count: Number.isInteger(number) && number >= 1 && number <= 16 ? number : 16 };
+	// Match the disabled UCI aliases accepted by the backend and boot helper.
+	// Missing values retain the historical enabled default.
+	const disabled = enabled === "0" || enabled === "false" || enabled === "no" || enabled === "off";
+	return { enabled: !disabled, count: Number.isInteger(number) && number >= 1 && number <= 16 ? number : 16 };
 }
 export function readPortConfiguration(): PortConfiguration {
 	return portConfiguration(L.uci.get("fttr", "ports", "enabled"), L.uci.get("fttr", "ports", "count"));

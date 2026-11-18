@@ -1,6 +1,44 @@
 // SPDX-License-Identifier: Apache-2.0
 import assert from "node:assert/strict";
 import { beforeEach, test } from "node:test";
+import { pendingPorts, portConfiguration } from "../src/view/components/status-model";
+
+// UCI values are strings. Keep these expectations aligned with ports.rs and fttr-ports.
+test("port disabled aliases report zero configured ports and pending reboot only while interfaces remain", () => {
+	for (const enabled of ["0", "false", "no", "off"]) {
+		const config = portConfiguration(enabled, "4");
+		assert.deepEqual(config, { enabled: false, count: 4 }, enabled);
+		assert.equal(config.enabled ? config.count : 0, 0, enabled);
+		assert.equal(pendingPorts(config, 0), false, enabled);
+		assert.equal(pendingPorts(config, 4), true, enabled);
+		assert.equal(pendingPorts(config, null), false, enabled);
+	}
+});
+
+test("port enabled aliases and legacy defaults preserve count and distinguish saved from runtime", () => {
+	for (const enabled of ["1", "true", "yes", "on", "", undefined]) {
+		for (let count = 1; count <= 16; count++) {
+			const config = portConfiguration(enabled, String(count));
+			assert.deepEqual(config, { enabled: true, count });
+			assert.equal(config.enabled ? config.count : 0, count);
+			assert.equal(pendingPorts(config, count), false);
+			assert.equal(pendingPorts(config, 0), true);
+			assert.equal(pendingPorts(config, null), false);
+		}
+	}
+	assert.deepEqual(portConfiguration(undefined, undefined), { enabled: true, count: 16 });
+	assert.equal(pendingPorts(portConfiguration("1", "4"), 16), true);
+	assert.equal(pendingPorts(portConfiguration("1", "16"), 4), true);
+});
+
+test("invalid port counts retain the existing display fallback and cannot imply zero configured ports", () => {
+	for (const count of [undefined, "", "0", "17", "-1", "4.5", "invalid", "Infinity"]) {
+		const config = portConfiguration("yes", count);
+		assert.deepEqual(config, { enabled: true, count: 16 });
+		assert.equal(pendingPorts(config, 16), false);
+		assert.equal(pendingPorts(config, 0), true);
+	}
+});
 import { type ConfigRow, type ConfigSnapshot, list, snapshot, wifiChoices } from "../src/view/config/model";
 import { canMoveWifi, removeGroup, removeTemplate, removeWifi } from "../src/view/config/operations";
 import { recoveryEntries } from "../src/view/config/recovery";
