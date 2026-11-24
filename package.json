@@ -1,0 +1,54 @@
+{
+	"name": "luci-app-fttr",
+	"private": true,
+	"version": "0.1.0",
+	"license": "Apache-2.0",
+	"type": "module",
+	"engines": {
+		"node": ">=18"
+	},
+	"packageManager": "pnpm@10.12.4",
+	"scripts": {
+		"build": "rsbuild build",
+		"build:watch": "rsbuild build --watch",
+		"lint": "biome check --no-errors-on-unmatched src rsbuild.config.ts luci-i18n.config.ts",
+		"format": "biome format --write --no-errors-on-unmatched src rsbuild.config.ts luci-i18n.config.ts",
+		"i18n:extract": "luci-types i18n --no-translate",
+		"i18n:build": "dotenvx run -- luci-types i18n --translate",
+		"typecheck": "tsc -p tsconfig.json --noEmit",
+		"sdk:check": "node scripts/check-sdk.mjs",
+		"sdk:generate": "node scripts/check-sdk.mjs --generate",
+		"icons:generate": "node scripts/generate-icons.mjs",
+		"check": "pnpm sdk:check && pnpm typecheck && pnpm test && pnpm test:package && pnpm build",
+		"test": "tsx --import ./tests/css-inline-hook.mjs --test tests/config.test.ts tests/npu.test.ts tests/optical.test.ts tests/hardware.test.ts tests/calibration.test.ts tests/fec-monitor.test.ts tests/fpga.test.ts tests/platform.test.ts tests/topology.test.ts tests/sync.test.ts tests/sdk.test.ts tests/timeout.test.ts tests/onu-details.test.ts tests/schema-codegen.test.mjs",
+		"test:luci": "tsx --test tests/luci-form.test.ts",
+		"test:device": "tsx --test tests/device-contracts.test.ts",
+		"dev:remote": "dotenvx run -- luci-types dev",
+		"package:generate": "node scripts/generate-package.mjs",
+		"test:package": "node --test tests/package.test.mjs",
+		"prepare": "husky"
+	},
+	"lint-staged": {
+		"src/**/*.{js,ts,tsx,jsx,json}": [
+			"biome check --write --no-errors-on-unmatched"
+		]
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.5.0",
+		"@commitlint/cli": "^19.8.1",
+		"@commitlint/config-conventional": "^19.8.1",
+		"@dotenvx/dotenvx": "^2.19.1",
+		"@iconify-json/fluent": "^1.2.61",
+		"@lazulikao/luci-types": "github:LazuliKao/luci-types#4794a5462f1ba66bff5e3cf13058feab09c20eb4",
+		"@rsbuild/core": "^2.1.9",
+		"@types/node": "^22.19.21",
+		"husky": "^9.1.7",
+		"lint-staged": "^14.0.1",
+		"tsx": "^4.22.4",
+		"typescript": "^6.0.3",
+		"zod": "4.3.6"
+	},
+	"dependencies": {
+		"@antv/g6": "5.1.1"
+	}
+}
