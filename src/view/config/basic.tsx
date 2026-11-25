@@ -33,6 +33,29 @@ export function addBasic(
 			return `${saved} / ${active}${saved !== active ? ` · ${_("Pending restart")}` : ""}`;
 		};
 	}
+	if (platform.platform_id === "h3c-hm2004-du") {
+		const h3c = section.taboption(
+			"basic",
+			L.form.SectionValue,
+			"_h3c",
+			L.form.NamedSection,
+			"h3c",
+			"h3c",
+		).subsection;
+		h3c.addremove = false;
+		const count = field(h3c, L.form.Value, "lan_ports", _("FTTR LAN port count"), "range(1,16)");
+		count.default = "16";
+		count.rmempty = false;
+		count.description = _(
+			"How many fttr downstream ports (fttr1..fttrN) stay bridged into br-lan (1-16). Extra ports are detached and shut down. Restart FTTR to apply.",
+		);
+		const status = field(h3c, L.form.DummyValue, "_lan_ports_status", _("Saved / active ports"));
+		status.cfgvalue = () => {
+			const saved = Number(L.uci.get("fttr", "h3c", "lan_ports") || 16);
+			const active = platform.onus.filter((o) => o.interface && /^fttr\d+$/.test(o.interface)).length;
+			return `${saved} / ${active}${saved !== active ? ` · ${_("Pending restart")}` : ""}`;
+		};
+	}
 	const acs = section.taboption("basic", L.form.SectionValue, "_acs", L.form.NamedSection, "acs", "acs");
 	const a = acs.subsection;
 	a.addremove = false;

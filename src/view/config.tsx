@@ -49,6 +49,10 @@ const main = view.extend({
 			uci.add("fttr", "fiberhome", "fiberhome");
 			uci.set("fttr", "fiberhome", "onu_count", "128");
 		}
+		if (platform.platform_id === "h3c-hm2004-du" && !uci.sections("fttr", "h3c").length) {
+			uci.add("fttr", "h3c", "h3c");
+			uci.set("fttr", "h3c", "lan_ports", "16");
+		}
 		if (!uci.sections("fttr", "provisioning").length) uci.add("fttr", "provisioning", "provisioning");
 		if (!uci.sections("fttr", "management").length) uci.add("fttr", "management", "management");
 		if (!uci.sections("fttr", "omci_auth").length) {
