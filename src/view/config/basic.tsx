@@ -26,11 +26,12 @@ export function addBasic(
 		count.description = _(
 			"Reserves ONU IDs 0 through count − 1. Restart FTTR to apply; this does not guarantee concurrent ONU capacity.",
 		);
-		const status = field(fiberhome, L.form.DummyValue, "_count_status", _("Saved / active count"));
+		const status = field(fiberhome, L.form.DummyValue, "_count_status", _("Configured ONU interface count"));
 		status.cfgvalue = () => {
 			const saved = Number(L.uci.get("fttr", "fiberhome", "onu_count") || 128);
-			const active = platform.onus.length;
-			return `${saved} / ${active}${saved !== active ? ` · ${_("Pending restart")}` : ""}`;
+			return _(
+				"ONU IDs 0 through %s are reserved. Save & Apply, then restart FTTR for the change to take effect.",
+			).replace("%s", String(saved - 1));
 		};
 	}
 	if (platform.platform_id === "h3c-hm2004-du") {
@@ -49,11 +50,12 @@ export function addBasic(
 		count.description = _(
 			"How many fttr downstream ports (fttr1..fttrN) stay bridged into br-lan (1-16). Extra ports are detached and shut down. Restart FTTR to apply.",
 		);
-		const status = field(h3c, L.form.DummyValue, "_lan_ports_status", _("Saved / active ports"));
+		const status = field(h3c, L.form.DummyValue, "_lan_ports_status", _("Configured FTTR LAN ports"));
 		status.cfgvalue = () => {
 			const saved = Number(L.uci.get("fttr", "h3c", "lan_ports") || 16);
-			const active = platform.onus.filter((o) => o.interface && /^fttr\d+$/.test(o.interface)).length;
-			return `${saved} / ${active}${saved !== active ? ` · ${_("Pending restart")}` : ""}`;
+			return _(
+				"br-lan will bridge %s fttr port(s). Save & Apply, then restart FTTR for the change to take effect. Ports beyond this count are detached from br-lan and shut down.",
+			).replace("%s", String(saved));
 		};
 	}
 	const acs = section.taboption("basic", L.form.SectionValue, "_acs", L.form.NamedSection, "acs", "acs");
