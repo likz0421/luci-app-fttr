@@ -30,6 +30,20 @@ import tokensCss from "./styles/tokens.css?inline";
 
 const view = L.view;
 const poll = L.Poll;
+const uci = L.uci;
+
+/** H3C HM2004-DU: honour fttr.h3c.lan_ports so the UI only shows the
+ * downstream ports that are actually bridged into br-lan. 0 means no limit
+ * (all other platforms keep their full platform-reported port list). */
+function activePortLimit(platform: PlatformInfoReply): number {
+	if (platform.platform_id !== "h3c-hm2004-du") return 0;
+	try {
+		const raw = Number(uci.get("fttr", "h3c", "lan_ports") || 0);
+		return Number.isFinite(raw) && raw >= 1 ? Math.min(Math.floor(raw), 16) : 0;
+	} catch {
+		return 0;
+	}
+}
 
 interface PortCard {
 	element: HTMLElement;
@@ -449,6 +463,7 @@ function createStatusView(
 	initialStatus: FttrStatus,
 	initialDevices: NetworkDevices,
 	platform: PlatformInfoReply,
+	portLimit: number,
 ): StatusView {
 	const initialOptical = initialStatus.optical_transceiver ?? {};
 	let currentDevices = initialDevices;
@@ -458,6 +473,7 @@ function createStatusView(
 	const ports = new Map<number, PortCard>();
 	const portsGrid = <div class="fttr-ports-grid" />;
 	const noPortsNode = <p>{_("No downstream ports are reported by the selected platform.")}</p>;
+	const portLimitNode = <p class="fttr-port-limit-note" />;
 
 	const fpgaNode = <span class="fttr-badge" />;
 	const opticalNode = <span>{text(initialOptical.model)}</span>;
@@ -514,6 +530,7 @@ function createStatusView(
 			</div>
 			<div class="cbi-section">
 				<h3>{_("Downstream ports")}</h3>
+				{portLimitNode}
 				{noPortsNode}
 				{portsGrid}
 			</div>
@@ -553,8 +570,23 @@ function createStatusView(
 		txPowerNode.textContent = formatPower(optical.tx_power_dbm);
 
 		onuTable.update(status.sub_gateways ?? [], status.onu_pinning, status.switch_ports ?? []);
+		const reported = status.switch_ports ?? [];
+		const shown = portLimit > 0 ? reported.filter((p) => p.port <= portLimit) : reported;
+		const hiddenCount = reported.length - shown.length;
+		if (portLimit > 0) {
+			portLimitNode.textContent =
+				_(
+					"Showing %s active downstream port(s) (fttr1–fttr%s). %s extra kernel port(s) are detached from br-lan and hidden. Change the count under FTTR → Configuration → Basic.",
+				)
+					.replace("%s", String(Math.min(portLimit, shown.length || portLimit)))
+					.replace("%s", String(portLimit))
+					.replace("%s", String(Math.max(0, hiddenCount)));
+			portLimitNode.hidden = false;
+		} else {
+			portLimitNode.hidden = true;
+		}
 		const currentPorts = new Set<number>();
-		for (const [index, portStatus] of (status.switch_ports ?? []).entries()) {
+		for (const [index, portStatus] of shown.entries()) {
 			if (currentPorts.has(portStatus.port)) continue;
 			currentPorts.add(portStatus.port);
 			let port = ports.get(portStatus.port);
@@ -591,7 +623,12 @@ let refreshing = false;
 let lastSuccess = Date.now();
 
 export const main = view.extend({
-	async load(): Promise<{ status: FttrStatus; devices: NetworkDevices; platform: PlatformInfoReply }> {
+	async load(): Promise<{
+		status: FttrStatus;
+		devices: NetworkDevices;
+		platform: PlatformInfoReply;
+		portLimit: number;
+	}> {
 		const [status, deviceResult, platform] = await Promise.all([
 			getStatus(),
 			getNetworkDevices().catch((error) => {
@@ -600,10 +637,17 @@ export const main = view.extend({
 			}),
 			getPlatformInfo(),
 		]);
-		return { status, devices: deviceResult, platform };
+		// Load UCI so activePortLimit() can read fttr.h3c.lan_ports for H3C boards.
+		await uci.load("fttr").catch(() => undefined);
+		return { status, devices: deviceResult, platform, portLimit: activePortLimit(platform) };
 	},
-	render(data: { status: FttrStatus; devices: NetworkDevices; platform: PlatformInfoReply }): HTMLElement {
-		pageView = createStatusView(data.status, data.devices, data.platform);
+	render(data: {
+		status: FttrStatus;
+		devices: NetworkDevices;
+		platform: PlatformInfoReply;
+		portLimit: number;
+	}): HTMLElement {
+		pageView = createStatusView(data.status, data.devices, data.platform, data.portLimit);
 		pageRoot = pageView.element;
 		poll.add(async () => {
 			if (refreshing || isPageHidden() || !pageRoot?.isConnected || !pageView) return;
