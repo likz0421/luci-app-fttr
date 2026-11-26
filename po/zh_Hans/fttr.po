@@ -3418,3 +3418,18 @@ msgstr "缩小"
 
 msgid "速度：%s Mbit/s，双工：%s"
 msgstr "速度：%s Mbit/s，双工：%s"
+
+msgid "FTTR LAN port count"
+msgstr "FTTR 局域网端口数量"
+
+msgid "How many fttr downstream ports (fttr1..fttrN) stay bridged into br-lan (1-2, this firmware creates 2 fttr ports). Restart FTTR to apply."
+msgstr "保留多少个 fttr 下联端口（fttr1..fttrN）桥接到 br-lan（1-2，本固件创建 2 个 fttr 端口）。重启 FTTR 生效。"
+
+msgid "Configured FTTR LAN ports"
+msgstr "已配置的 FTTR 局域网端口数"
+
+msgid "br-lan will bridge %s fttr port(s). Save & Apply, then restart FTTR for the change to take effect."
+msgstr "br-lan 将桥接 %s 个 fttr 端口。保存并应用后，重启 FTTR 使其生效。"
+
+msgid "%s of %s downstream ports are bridged into br-lan. The remaining kernel ports are detached. Change the count under FTTR → Configuration → Basic."
+msgstr "%s / %s 个下联端口已桥接到 br-lan，其余内核端口已分离。可在 FTTR → 配置 → 基本设置 中修改数量。"
