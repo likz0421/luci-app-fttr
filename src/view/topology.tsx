@@ -19,20 +19,8 @@ import tokensCss from "./styles/tokens.css?inline";
 
 const view = L.view;
 const poll = L.Poll;
-const uci = L.uci;
 
 const REFRESH_INTERVAL = 10;
-
-/** H3C HM2004-DU: only render the downstream ports actually bridged into br-lan. */
-function activePortLimit(platform: PlatformInfoReply): number {
-	if (platform.platform_id !== "h3c-hm2004-du") return 0;
-	try {
-		const raw = Number(uci.get("fttr", "h3c", "lan_ports") || 0);
-		return Number.isFinite(raw) && raw >= 1 ? Math.min(Math.floor(raw), 16) : 0;
-	} catch {
-		return 0;
-	}
-}
 
 function onuLabel(onu: SubGateway): string {
 	return onu.serial_number || onu.identity?.equipment_id || `#${onu.onu_id}`;
@@ -44,10 +32,10 @@ interface Branch {
 	device: NetworkDevices[string] | undefined;
 }
 
-function branchList(status: FttrStatus, devices: NetworkDevices, portLimit: number): Branch[] {
+function branchList(status: FttrStatus, devices: NetworkDevices): Branch[] {
 	const onus = status.sub_gateways ?? [];
-	const reported = status.switch_ports ?? [];
-	const ports = portLimit > 0 ? reported.filter((p) => p.port <= portLimit) : reported;
+	// The backend reports exactly the bridged ports; use it as-is.
+	const ports = status.switch_ports ?? [];
 
 	if (ports.length) {
 		return ports.map((port) => ({
@@ -110,7 +98,6 @@ function createPage(
 	initialStatus: FttrStatus,
 	initialDevices: NetworkDevices,
 	platform: PlatformInfoReply,
-	portLimit: number,
 ): Page {
 	let dead = false;
 	let refreshing = false;
@@ -198,7 +185,7 @@ function createPage(
 			`${optical.phy_rate_downlink_gbps ?? "—"} / ${optical.phy_rate_uplink_gbps ?? "—"} Gbps`,
 		);
 
-		const list = branchList(status, devices, portLimit);
+		const list = branchList(status, devices);
 		const seen = new Set<number>();
 		list.forEach((branch, index) => {
 			const portNo = branch.port?.port ?? (branch.onu ? branch.onu.onu_id + 1 : index + 1);
@@ -257,24 +244,21 @@ export const main = view.extend({
 		status: FttrStatus;
 		devices: NetworkDevices;
 		platform: PlatformInfoReply;
-		portLimit: number;
 	}> {
 		const [status, deviceResult, platform] = await Promise.all([
 			getStatus(),
 			getNetworkDevices().catch(() => ({})),
 			getPlatformInfo(),
 		]);
-		await uci.load("fttr").catch(() => undefined);
-		return { status, devices: deviceResult, platform, portLimit: activePortLimit(platform) };
+		return { status, devices: deviceResult, platform };
 	},
 	render(data: {
 		status: FttrStatus;
 		devices: NetworkDevices;
 		platform: PlatformInfoReply;
-		portLimit: number;
 	}): HTMLElement {
 		activePage?.destroy();
-		activePage = createPage(data.status, data.devices, data.platform, data.portLimit);
+		activePage = createPage(data.status, data.devices, data.platform);
 		return activePage.element;
 	},
 	handleSaveApply: null,
