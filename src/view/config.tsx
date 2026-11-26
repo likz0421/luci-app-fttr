@@ -51,7 +51,7 @@ const main = view.extend({
 		}
 		if (platform.platform_id === "h3c-hm2004-du" && !uci.sections("fttr", "h3c").length) {
 			uci.add("fttr", "h3c", "h3c");
-			uci.set("fttr", "h3c", "lan_ports", "16");
+			uci.set("fttr", "h3c", "lan_ports", "2");
 		}
 		if (!uci.sections("fttr", "provisioning").length) uci.add("fttr", "provisioning", "provisioning");
 		if (!uci.sections("fttr", "management").length) uci.add("fttr", "management", "management");

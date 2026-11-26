@@ -1,4 +1,4 @@
-/* Lightweight deterministic FTTR topology — no canvas, no G6. */
+/* Deterministic FTTR topology — pure DOM/SVG, no canvas, no G6, no snapshot ubus. */
 
 .tlt-page {
 	padding-bottom: 1.5rem;
@@ -48,65 +48,86 @@
 	font-size: 0.8rem;
 }
 
-.tlt-tree {
+.tlt-canvas {
 	border: 1px solid var(--color-border-tertiary, rgba(0, 0, 0, 0.15));
-	border-radius: 8px;
-	padding: 1.25rem 1rem;
+	border-radius: 10px;
+	padding: 1.25rem;
 	background: var(--color-background-secondary, rgba(0, 0, 0, 0.02));
+	overflow-x: auto;
 }
 
-.tlt-root-row {
-	display: flex;
-	justify-content: center;
+.tlt-svg {
+	display: block;
+	width: 100%;
+	min-width: 480px;
+	height: auto;
 }
 
-.tlt-spine {
-	width: 2px;
-	height: 22px;
-	margin: 0 auto;
-	background: var(--color-border-secondary, rgba(0, 0, 0, 0.3));
+.tlt-link {
+	fill: none;
+	stroke: var(--color-border-secondary, rgba(0, 0, 0, 0.3));
+	stroke-width: 2;
 }
 
-.tlt-branches {
+.tlt-link.is-up {
+	stroke: #2ecc71;
+	stroke-width: 2.5;
+}
+
+.tlt-link-dot {
+	fill: var(--color-border-secondary, rgba(0, 0, 0, 0.3));
+}
+
+.tlt-link-dot.is-up {
+	fill: #2ecc71;
+}
+
+.tlt-node-box {
+	fill: var(--color-background-primary, #fff);
+	stroke: var(--color-border-secondary, rgba(0, 0, 0, 0.3));
+	stroke-width: 1.5;
+}
+
+.tlt-node-box.is-up {
+	stroke: #2ecc71;
+}
+
+.tlt-node-box.is-root {
+	fill: var(--color-background-info, #e8f1fb);
+	stroke: var(--color-border-info, #378add);
+	stroke-width: 2;
+}
+
+.tlt-node-title {
+	fill: var(--color-text-primary, #000);
+	font-size: 13px;
+	font-weight: 500;
+}
+
+.tlt-node-sub {
+	fill: var(--color-text-secondary, #888);
+	font-size: 11px;
+}
+
+.tlt-node-badge {
+	fill: var(--color-text-tertiary, #999);
+	font-size: 11px;
+}
+
+.tlt-node-badge.is-up {
+	fill: #1D9E75;
+}
+
+.tlt-detail {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 0.9rem;
-	align-items: stretch;
+	gap: 0.75rem;
+	margin-top: 1rem;
 }
 
-.tlt-branch {
-	position: relative;
+.tlt-detail-card {
 	flex: 1 1 220px;
-	max-width: 320px;
-	min-width: 200px;
-	padding-top: 18px;
-}
-
-.tlt-branch-link {
-	position: absolute;
-	top: 0;
-	left: 50%;
-	width: 2px;
-	height: 18px;
-	background: var(--color-border-secondary, rgba(0, 0, 0, 0.3));
-}
-
-.tlt-branch-link::before,
-.tlt-branch-link::after {
-	content: "";
-	position: absolute;
-	left: 0;
-	width: 50%;
-	height: 2px;
-	background: var(--color-border-secondary, rgba(0, 0, 0, 0.3));
-}
-
-.tlt-branch-link::before {
-	top: 0;
-}
-
-.tlt-card {
-	height: 100%;
+	max-width: 360px;
 	border: 1px solid var(--color-border-tertiary, rgba(0, 0, 0, 0.15));
 	border-left: 3px solid var(--color-border-secondary, rgba(0, 0, 0, 0.3));
 	border-radius: 6px;
@@ -114,11 +135,11 @@
 	background: var(--color-background-primary, #fff);
 }
 
-.tlt-card.is-up {
+.tlt-detail-card.is-up {
 	border-left-color: #2ecc71;
 }
 
-.tlt-card-title {
+.tlt-detail-title {
 	font-weight: 500;
 	margin-bottom: 0.4rem;
 }
@@ -152,6 +173,7 @@
 	font-size: 0.8rem;
 }
 
-[data-dark="true"] .tlt-card {
+[data-dark="true"] .tlt-detail-card,
+[data-dark="true"] .tlt-node-box {
 	background: var(--color-background-secondary, rgba(255, 255, 255, 0.05));
 }

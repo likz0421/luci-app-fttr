@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
-// Lightweight, deterministic FTTR topology built from the stable get_status
-// contract. It replaces the upstream AntV G6 snapshot graph, which depended on
-// three fragile ubus methods (get_topology / _node / _clients) and produced
-// "sources unavailable / stale snapshot / issues" on custom firmware.
+// Deterministic FTTR topology built from the stable get_status contract.
+// Pure DOM/SVG: no canvas, no AntV G6, no fragile snapshot ubus chain.
+// The number of branches equals the ports the backend actually bridges.
 import { isPageHidden } from "../visibility";
 import {
 	getRegistrationBadgeSpec,
@@ -21,6 +20,7 @@ const view = L.view;
 const poll = L.Poll;
 
 const REFRESH_INTERVAL = 10;
+const SVG_NS = "http://www.w3.org/2000/svg";
 
 function onuLabel(onu: SubGateway): string {
 	return onu.serial_number || onu.identity?.equipment_id || `#${onu.onu_id}`;
@@ -34,9 +34,8 @@ interface Branch {
 
 function branchList(status: FttrStatus, devices: NetworkDevices): Branch[] {
 	const onus = status.sub_gateways ?? [];
-	// The backend reports exactly the bridged ports; use it as-is.
+	// Backend reports exactly the bridged ports; use it as-is (single source of truth).
 	const ports = status.switch_ports ?? [];
-
 	if (ports.length) {
 		return ports.map((port) => ({
 			port,
@@ -44,14 +43,29 @@ function branchList(status: FttrStatus, devices: NetworkDevices): Branch[] {
 			device: port.interface ? devices[port.interface] : undefined,
 		}));
 	}
-
-	// Fallback: no switch_ports reported. Derive one branch per ONU so the
-	// topology still renders something meaningful.
+	// Fallback: no switch_ports reported — one branch per known ONU.
 	return onus.map((onu) => ({
 		port: null,
 		onu,
 		device: onu.data_path?.interface ? devices[onu.data_path.interface] : undefined,
 	}));
+}
+
+function isUp(branch: Branch): boolean {
+	return Boolean(branch.port?.carrier || branch.device?.carrier);
+}
+
+function branchNumber(branch: Branch, index: number): number {
+	return branch.port?.port ?? (branch.onu ? branch.onu.onu_id + 1 : index + 1);
+}
+
+function svgEl<K extends keyof SVGElementTagNameMap>(
+	tag: K,
+	attrs: Record<string, string | number> = {},
+): SVGElementTagNameMap[K] {
+	const el = document.createElementNS(SVG_NS, tag);
+	for (const [key, value] of Object.entries(attrs)) el.setAttribute(key, String(value));
+	return el;
 }
 
 interface FieldCard {
@@ -61,12 +75,12 @@ interface FieldCard {
 
 function createCard(title: string): FieldCard {
 	const el = (
-		<div class="tlt-card">
-			<div class="tlt-card-title">{title}</div>
-			<div class="tlt-card-body" />
+		<div class="tlt-detail-card">
+			<div class="tlt-detail-title">{title}</div>
+			<div class="tlt-detail-body" />
 		</div>
 	) as HTMLElement;
-	const body = el.querySelector(".tlt-card-body") as HTMLElement;
+	const body = el.querySelector(".tlt-detail-body") as HTMLElement;
 	const fields = new Map<string, HTMLElement>();
 	return {
 		element: el,
@@ -101,16 +115,15 @@ function createPage(
 ): Page {
 	let dead = false;
 	let refreshing = false;
-	const controllerCard = createCard(_("OLT controller"));
-	const portCards = new Map<number, FieldCard>();
-	const branches = <div class="tlt-branches" />;
-	const summary = <div class="tlt-summary" />;
+	const summary = <div class="tlt-summary tlt-head-meta" />;
 	const updated = <span class="tlt-updated" />;
 	const staleNotice = (
 		<p class="alert-message warning" role="status" hidden>
 			{_("Live status is unavailable. The displayed data may be stale.")}
 		</p>
 	);
+	const canvas = <div class="tlt-canvas" />;
+	const detail = <div class="tlt-detail" />;
 
 	const element = (
 		<div class="cbi-map tlt-page">
@@ -118,7 +131,7 @@ function createPage(
 			<header class="tlt-header">
 				<div>
 					<h2>{_("FTTR topology")}</h2>
-					<p class="tlt-subtitle">{_("Live PON links and registered sub-gateways")}</p>
+					<p class="tlt-subtitle">{_("PON links from the OLT controller to each active downstream port")}</p>
 				</div>
 				<div class="tlt-head-meta">
 					{summary}
@@ -126,76 +139,159 @@ function createPage(
 				</div>
 			</header>
 			{staleNotice}
-			<div class="tlt-tree">
-				<div class="tlt-root-row">{controllerCard.element}</div>
-				<div class="tlt-spine" />
-				{branches}
-			</div>
+			{canvas}
+			{detail}
 			<footer class="tlt-footer">
 				<span>{_("Auto-refresh: %s s").format(String(REFRESH_INTERVAL))}</span>
-				<span>{_("Port count follows FTTR → Configuration → Basic")}</span>
+				<span>{_("Port count follows the bridged ports reported by the controller")}</span>
 			</footer>
 		</div>
 	) as HTMLElement;
 
-	function renderBranch(branch: Branch, index: number): HTMLElement {
-		const { port, onu, device } = branch;
-		const portNo = port?.port ?? (onu ? onu.onu_id + 1 : index + 1);
-		let card = portCards.get(portNo);
-		if (!card) {
-			card = createCard(_("Downstream port %s").format(String(portNo)));
-			portCards.set(portNo, card);
-		}
-		const ifname = port?.interface ?? onu?.data_path?.interface ?? "—";
-		card.set(_("Interface"), text(ifname));
-		card.set(_("Link"), port?.status ?? (device?.carrier ? "UP" : "DOWN"));
-		if (device?.link?.speed !== undefined) card.set(_("Speed"), formatLinkSpeed(device.link.speed));
-		if (onu) {
-			card.set(_("ONU"), onuLabel(onu));
-			card.set(_("Registration"), getRegistrationBadgeSpec(onu.state).label);
-			card.set(_("Wi-Fi"), getWifiSyncBadgeSpec(onu.wifi_sync).label);
-		} else {
-			card.set(_("ONU"), port?.reserved_sn ? _("Reserved: %s").format(port.reserved_sn) : "—");
-		}
-		card.element.classList.toggle("is-up", Boolean(port?.carrier || device?.carrier));
-		card.element.dataset.onuId = onu ? String(onu.onu_id) : "";
+	const detailCards = new Map<number, FieldCard>();
 
-		const wrap = (
-			<div class="tlt-branch">
-				<div class="tlt-branch-link" />
-				{card.element}
-			</div>
-		) as HTMLElement;
-		wrap.dataset.port = String(portNo);
-		return wrap;
+	function drawSvg(list: Branch[]): void {
+		const width = Math.max(480, list.length * 150 + 120);
+		const rootY = 34;
+		const leafY = 138;
+		const rootX = width / 2;
+		const svg = svgEl("svg", {
+			class: "tlt-svg",
+			viewBox: `0 0 ${width} 210`,
+			preserveAspectRatio: "xMidYMid meet",
+			role: "img",
+		});
+		const title = svgEl("title");
+		title.textContent = _("FTTR PON topology");
+		svg.append(title);
+
+		const leafXs = list.map((_, i) => {
+			if (list.length === 1) return rootX;
+			const span = width - 160;
+			return 80 + (span * i) / (list.length - 1);
+		});
+
+		// Links first so nodes render on top.
+		list.forEach((branch, i) => {
+			const up = isUp(branch);
+			const x = leafXs[i] ?? rootX;
+			const path = svgEl("path", {
+				class: `tlt-link${up ? " is-up" : ""}`,
+				d: `M ${rootX} ${rootY + 26} C ${rootX} ${(rootY + leafY) / 2}, ${x} ${(rootY + leafY) / 2}, ${x} ${leafY - 26}`,
+			});
+			svg.append(path);
+		});
+
+		// Root node (OLT controller).
+		const rootW = 150;
+		svg.append(
+			svgEl("rect", {
+				class: "tlt-node-box is-root",
+				x: rootX - rootW / 2,
+				y: rootY,
+				width: rootW,
+				height: 52,
+				rx: 10,
+			}),
+		);
+		const rootTitle = svgEl("text", {
+			class: "tlt-node-title",
+			x: rootX,
+			y: rootY + 21,
+			"text-anchor": "middle",
+		});
+		rootTitle.textContent = _("OLT controller");
+		const rootSub = svgEl("text", {
+			class: "tlt-node-sub",
+			x: rootX,
+			y: rootY + 39,
+			"text-anchor": "middle",
+		});
+		rootSub.textContent = text(platform.model || platform.vendor || "HM2004-DU").slice(0, 22);
+		svg.append(rootTitle, rootSub);
+
+		// Leaf nodes (downstream ports).
+		list.forEach((branch, i) => {
+			const up = isUp(branch);
+			const x = leafXs[i] ?? rootX;
+			const no = branchNumber(branch, i);
+			const w = 132;
+			svg.append(
+				svgEl("rect", {
+					class: `tlt-node-box${up ? " is-up" : ""}`,
+					x: x - w / 2,
+					y: leafY,
+					width: w,
+					height: 56,
+					rx: 8,
+				}),
+			);
+			const t = svgEl("text", {
+				class: "tlt-node-title",
+				x,
+				y: leafY + 19,
+				"text-anchor": "middle",
+			});
+			t.textContent = _("Port %s").format(String(no));
+			const s = svgEl("text", {
+				class: "tlt-node-sub",
+				x,
+				y: leafY + 35,
+				"text-anchor": "middle",
+			});
+			s.textContent = text(branch.port?.interface ?? branch.onu?.data_path?.interface ?? "—");
+			const badge = svgEl("text", {
+				class: `tlt-node-badge${up ? " is-up" : ""}`,
+				x,
+				y: leafY + 50,
+				"text-anchor": "middle",
+			});
+			const state = branch.onu ? getRegistrationBadgeSpec(branch.onu.state).label : branch.port?.status ?? (up ? "UP" : "DOWN");
+			badge.textContent = `${up ? "● " : "○ "}${state}`.slice(0, 20);
+			svg.append(t, s, badge);
+		});
+
+		canvas.replaceChildren(svg);
+	}
+
+	function renderDetail(status: FttrStatus, devices: NetworkDevices, list: Branch[]): void {
+		const seen = new Set<number>();
+		list.forEach((branch, index) => {
+			const no = branchNumber(branch, index);
+			seen.add(no);
+			let card = detailCards.get(no);
+			if (!card) {
+				card = createCard(_("Downstream port %s").format(String(no)));
+				detailCards.set(no, card);
+			}
+			const { port, onu, device } = branch;
+			card.set(_("Interface"), text(port?.interface ?? onu?.data_path?.interface ?? "—"));
+			card.set(_("Link"), port?.status ?? (device?.carrier ? "UP" : "DOWN"));
+			if (device?.link?.speed !== undefined) card.set(_("Speed"), formatLinkSpeed(device.link.speed));
+			if (onu) {
+				card.set(_("ONU"), onuLabel(onu));
+				card.set(_("Registration"), getRegistrationBadgeSpec(onu.state).label);
+				card.set(_("Wi-Fi"), getWifiSyncBadgeSpec(onu.wifi_sync).label);
+			} else {
+				card.set(_("ONU"), port?.reserved_sn ? _("Reserved: %s").format(port.reserved_sn) : "—");
+			}
+			card.element.classList.toggle("is-up", isUp(branch));
+		});
+		// Rebuild the detail container in branch order, dropping stale cards.
+		const nodes: HTMLElement[] = [];
+		list.forEach((branch, index) => {
+			const card = detailCards.get(branchNumber(branch, index));
+			if (card) nodes.push(card.element);
+		});
+		detail.replaceChildren(...nodes);
+		for (const no of detailCards.keys()) if (!seen.has(no)) detailCards.delete(no);
 	}
 
 	const update = (status: FttrStatus, devices: NetworkDevices) => {
 		if (dead) return;
-		const optical = status.optical_transceiver ?? {};
-		controllerCard.set(_("Model"), text(platform.model || optical.model || platform.vendor));
-		controllerCard.set(_("Controller"), status.fpga_status ? text(status.fpga_status) : "—");
-		controllerCard.set(_("Optical module"), text(optical.model));
-		controllerCard.set(
-			_("TX power"),
-			optical.tx_power_dbm == null ? "—" : `${optical.tx_power_dbm.toFixed(2)} dBm`,
-		);
-		controllerCard.set(
-			_("Rate"),
-			`${optical.phy_rate_downlink_gbps ?? "—"} / ${optical.phy_rate_uplink_gbps ?? "—"} Gbps`,
-		);
-
 		const list = branchList(status, devices);
-		const seen = new Set<number>();
-		list.forEach((branch, index) => {
-			const portNo = branch.port?.port ?? (branch.onu ? branch.onu.onu_id + 1 : index + 1);
-			seen.add(portNo);
-			const wrap = renderBranch(branch, index);
-			const current = branches.children.item(index);
-			if (current !== wrap) branches.insertBefore(wrap, current);
-		});
-		while (branches.children.length > list.length) branches.lastElementChild?.remove();
-		for (const [portNo, card] of portCards) if (!seen.has(portNo)) portCards.delete(portNo);
+		drawSvg(list);
+		renderDetail(status, devices, list);
 
 		const onus = status.sub_gateways ?? [];
 		summary.replaceChildren(

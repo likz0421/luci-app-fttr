@@ -44,17 +44,17 @@ export function addBasic(
 			"h3c",
 		).subsection;
 		h3c.addremove = false;
-		const count = field(h3c, L.form.Value, "lan_ports", _("FTTR LAN port count"), "range(1,16)");
-		count.default = "16";
+		const count = field(h3c, L.form.Value, "lan_ports", _("FTTR LAN port count"), "range(1,2)");
+		count.default = "2";
 		count.rmempty = false;
 		count.description = _(
-			"How many fttr downstream ports (fttr1..fttrN) stay bridged into br-lan (1-16). Extra ports are detached and shut down. Restart FTTR to apply.",
+			"How many fttr downstream ports (fttr1..fttrN) stay bridged into br-lan (1-2, this firmware creates 2 fttr ports). Restart FTTR to apply.",
 		);
 		const status = field(h3c, L.form.DummyValue, "_lan_ports_status", _("Configured FTTR LAN ports"));
 		status.cfgvalue = () => {
-			const saved = Number(L.uci.get("fttr", "h3c", "lan_ports") || 16);
+			const saved = Number(L.uci.get("fttr", "h3c", "lan_ports") || 2);
 			return _(
-				"br-lan will bridge %s fttr port(s). Save & Apply, then restart FTTR for the change to take effect. Ports beyond this count are detached from br-lan and shut down.",
+				"br-lan will bridge %s fttr port(s). Save & Apply, then restart FTTR for the change to take effect.",
 			).replace("%s", String(saved));
 		};
 	}
