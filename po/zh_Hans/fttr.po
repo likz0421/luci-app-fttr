@@ -3433,3 +3433,348 @@ msgstr "br-lan 将桥接 %s 个 fttr 端口。保存并应用后，重启 FTTR �
 
 msgid "%s of %s downstream ports are bridged into br-lan. The remaining kernel ports are detached. Change the count under FTTR → Configuration → Basic."
 msgstr "%s / %s 个下联端口已桥接到 br-lan，其余内核端口已分离。可在 FTTR → 配置 → 基本设置 中修改数量。"
+
+msgid "FTTR controller daemon, OMCI & CWMP TR-069 provisioning backend service, and fttrctl CLI utility."
+msgstr "FTTR 控制器守护进程、OMCI 与 CWMP TR-069 业务下发后端服务，以及 fttrctl 命令行工具。"
+
+msgid "Factory partition extraction and calibration data generation tool for H3C HM2004-DU."
+msgstr "用于 H3C HM2004-DU 的工厂分区提取与校准数据生成工具。"
+
+msgid "LuCI modern web management application for FTTR network monitoring, device configuration, and optical calibration."
+msgstr "用于 FTTR 网络监控、设备配置与光校准的 LuCI 现代 Web 管理应用。"
+
+msgid "Open-source Fiber-To-The-Room (FTTR) solution for OpenWrt, providing unified management, OMCI provisioning, CWMP synchronization, and optical diagnostics for primary gateways and downstream optical sub-gateways."
+msgstr "面向 OpenWrt 的开源全光组网（FTTR）方案，为主网关和下联光子网关提供统一管理、OMCI 业务下发、CWMP 同步与光诊断。"
+
+msgid "Tutorial and instructions for pairing and configuring downstream FTTR sub-gateways."
+msgstr "下联 FTTR 子网关的配对与配置教程和说明。"
+
+msgid "(exactly 288 bytes, or 56 register bytes with supplemented telemetry and no temperature compensation)"
+msgstr "（必须 288 字节，或 56 字节寄存器数据并补充遥测、不启用温度补偿）"
+
+msgid "(highlighted in yellow) is the hardware latch register. It is skipped during sequential writes, then written with"
+msgstr "（黄色高亮）为硬件锁存寄存器。顺序写入时会跳过它，随后写入"
+
+msgid "(the first %s bytes configure registers, followed by ADC diagnostic conversion coefficients from %s)."
+msgstr "（前 %s 字节为配置寄存器，其后为来自 %s 的 ADC 诊断转换系数）。"
+
+msgid "56-byte register image supplemented with built-in telemetry coefficients; temperature compensation disabled."
+msgstr "56 字节寄存器映像，补充内置遥测系数；温度补偿已禁用。"
+
+msgid "A 56-byte register-only file is also accepted with supplemented telemetry and temperature compensation disabled."
+msgstr "也接受 56 字节纯寄存器文件，将补充遥测并禁用温度补偿。"
+
+msgid "All parameters were parsed successfully and are previewed below. Verify them, then click the button below to upload to"
+msgstr "所有参数已成功解析，预览如下。请核对后点击下方按钮上传到"
+
+msgid "Application confirms the checked I2C sequence, not full register readback, measured optical power or HM2004 temperature compensation. Unverified live measurements remain unavailable."
+msgstr "应用仅确认所勾选的 I2C 序列，不校验完整寄存器回读、实测光功率或 HM2004 温度补偿。未经核实的实时测量值仍不可用。"
+
+msgid "Built-in data may be explicitly selected or chosen by automatic fallback. A sample hash does not establish calibration accuracy for this device."
+msgstr "内置数据可显式选择或由自动回退选中。样本哈希并不能证明本设备的校准精度。"
+
+msgid "Calibration is pending. Disabled optics remain disabled; the selected version will load on the next enable. Check candidate and active hashes above."
+msgstr "校准处于待生效状态。已禁用的光路保持禁用；所选版本将在下次启用时加载。请核对上方候选与当前哈希。"
+
+msgid "Downstream optical calibration parameters extracted from the 1MB Factory partition (offset %s)"
+msgstr "从 1MB 工厂分区（偏移 %s）提取的下联光校准参数"
+
+msgid "Incomplete job result"
+msgstr "任务结果不完整"
+
+msgid "Inconsistent job result chunks"
+msgstr "任务结果分块不一致"
+
+msgid "Invalid job result"
+msgstr "无效的任务结果"
+
+msgid "Job polling timed out; execution outcome is unknown. Do not automatically retry."
+msgstr "任务轮询超时，执行结果未知。请勿自动重试。"
+
+msgid "Job result exceeds the transport limit"
+msgstr "任务结果超过传输限制"
+
+msgid "Manage HM2004-DU UX3326 calibration snapshots. Auto selects the first valid source in this order:"
+msgstr "管理 HM2004-DU UX3326 校准快照。自动模式按以下顺序选择第一个有效来源："
+
+msgid "Mod_Lut_EN is enabled. This table controls registers 0x06/0x07; it is not a dBm target."
+msgstr "Mod_Lut_EN 已启用。此表控制寄存器 0x06/0x07；它不是 dBm 目标值。"
+
+msgid "RESET_N, GPON MAC TX and measured optical emission are separate states. Compensation codes are not dBm targets."
+msgstr "RESET_N、GPON MAC 发送与实测光发射是相互独立的状态。补偿码不是 dBm 目标值。"
+
+msgid "Reapplying temporarily stops ONU service, disables downstream transmission, verifies the live chip signature, writes the factory sequence and restores the saved optical settings. The factory partition is never written."
+msgstr "重新应用会临时停止 ONU 服务、关闭下联发射、校验芯片实时签名、写入工厂序列并恢复已保存的光设置。工厂分区永不会被写入。"
+
+msgid "Register-only file: telemetry coefficients are supplemented from built-in data; temperature compensation is disabled."
+msgstr "纯寄存器文件：遥测系数由内置数据补充；温度补偿已禁用。"
+
+msgid "Result polling stopped after leaving the page. The backend job is not cancelled."
+msgstr "离开页面后已停止轮询结果。后台任务不会被取消。"
+
+msgid "Saving does not switch the source or apply hardware. Select Firmware explicitly, then apply the selected calibration when ready."
+msgstr "保存不会切换来源或应用到硬件。请显式选择“固件”，准备就绪后再应用所选校准。"
+
+msgid "Source selection saved. Existing hardware and telemetry remain on the applied version until apply or the next enable."
+msgstr "来源选择已保存。在应用或下次启用之前，现有硬件与遥测仍使用已生效版本。"
+
+msgid "The file must contain 288 bytes, or 56 register bytes with supplemented telemetry and no temperature compensation."
+msgstr "文件必须为 288 字节，或 56 字节寄存器数据（补充遥测且不启用温度补偿）。"
+
+msgid "The operation completed without version confirmation. Refresh status before interpreting the outcome."
+msgstr "操作已完成但未确认版本。请在解读结果前刷新状态。"
+
+msgid "This backend does not expose versioned calibration state. Update the backend before selecting or applying a source."
+msgstr "此后端未提供版本化校准状态。选择或应用来源前请先更新后端。"
+
+msgid "Too many result chunks"
+msgstr "任务结果分块过多"
+
+msgid "UX3326S1 uses this device's original factory table. HM2004 coefficient editing, firmware uploads and source selection do not apply to this profile."
+msgstr "UX3326S1 使用本设备原厂表。HM2004 系数编辑、固件上传与来源选择对此配置不适用。"
+
+msgid "Unable to parse the calibration file structure. Please check the file's integrity."
+msgstr "无法解析校准文件结构，请检查文件完整性。"
+
+msgid "then built-in historical data. Explicit sources never silently fall back. Upload, source selection and application are separate operations."
+msgstr "然后使用内置历史数据。显式来源绝不静默回退。上传、来源选择和应用是相互独立的操作。"
+
+msgid "A missing group means a device points to a deleted group. Edit the device and select an existing group. If no suitable group exists, close this dialog and create a group first."
+msgstr "分组缺失表示设备指向了已删除的分组。请编辑设备并选择现有分组。如无合适分组，请关闭此对话框并先创建分组。"
+
+msgid "All listed VLANs share one management bridge and DHCP pool. Retain an existing listed management VLAN; the first VLAN is the fallback."
+msgstr "列出的所有 VLAN 共享一个管理桥和 DHCP 池。请保留一个已列出的管理 VLAN；第一个 VLAN 为回退项。"
+
+msgid "Automatically provision standard G.988 transparent Layer 2 bridge for unrecognized or third-party GPON ONUs in O5 state."
+msgstr "为 O5 状态下无法识别或第三方的 GPON ONU 自动下发标准 G.988 透明二层桥。"
+
+msgid "By default, extra WLANs are disabled and retained. Deleting objects is destructive and should only be selected deliberately."
+msgstr "默认情况下，额外的 WLAN 会被禁用并保留。删除对象属于破坏性操作，请谨慎选择。"
+
+msgid "Configured ONU interface count"
+msgstr "已配置的 ONU 接口数量"
+
+msgid "Create SSIDs here before selecting them in a network. Every SSID belongs to one template."
+msgstr "请先在此创建 SSID，然后在网络中选择。每个 SSID 都属于一个模板。"
+
+msgid "Create a template first, then add its SSIDs and networks in their tabs. Each editor changes one item. Confirm stages changes; Save & Apply applies the page configuration."
+msgstr "请先创建模板，再在其选项卡中添加 SSID 和网络。每个编辑器只修改一项。确认会暂存更改；保存并应用才会使本页配置生效。"
+
+msgid "Each item below identifies a configuration problem. Choose Edit to keep the item and correct its fields, or delete it if it is no longer needed."
+msgstr "以下每一项都表示一个配置问题。选择“编辑”可保留该项并修正其字段；如不再需要，请选择删除。"
+
+msgid "Enter this CPE's existing Connection Request credentials, not the ACS inbound HTTP Basic credentials. No custom credential defaults are assumed."
+msgstr "请输入此 CPE 现有的连接请求凭据，而非 ACS 入站 HTTP Basic 凭据。系统不会假定任何自定义凭据默认值。"
+
+msgid "Independent per device; enabled by default for all adapters. Enabled: on-demand sessions with periodic Inform enabled and an interval of at most 12 hours (backend default: 43200 seconds). Disabled: manually set PeriodicInformEnable to true and PeriodicInformInterval to at most 180 seconds; no interval is written automatically. Requires reachable CWMP, verified standard parameters, HTTP Digest support, a prior Inform with a ConnectionRequestURL and valid CPE credentials. Firmware support is not guaranteed. Acceptance is not proof of a session or completed RPCs."
+msgstr "按设备独立设置，所有适配器默认启用。启用：按需会话，开启周期性 Inform，间隔不超过 12 小时（后端默认 43200 秒）。禁用：手动将 PeriodicInformEnable 设为 true、PeriodicInformInterval 设为不超过 180 秒；不会自动写入间隔。要求 CWMP 可达、标准参数已核验、支持 HTTP Digest、此前有过带 ConnectionRequestURL 的 Inform 且 CPE 凭据有效。不保证固件支持。接受勾选并不代表会话已建立或 RPC 已完成。"
+
+msgid "Lists supported devices registered on the optical link, including devices that have not sent an ACS Inform. Devices already configured are omitted when adding a new device."
+msgstr "列出光链路上已注册的支持设备，包括尚未发送 ACS Inform 的设备。添加新设备时，已配置的设备不会显示。"
+
+msgid "Manual mode only discovers and plans. Use Apply management configuration on the Synchronization page to create or update the isolated network, ACS listener and child TR069 settings."
+msgstr "手动模式仅发现和规划。请在“同步”页面使用“应用管理配置”来创建或更新隔离网络、ACS 监听器和子 TR069 设置。"
+
+msgid "Manual mode only saves configuration; use Apply differences on the Synchronization page to send it to devices. Automatic mode synchronizes after Save & Apply when Configuration changed is selected."
+msgstr "手动模式仅保存配置；请在“同步”页面使用“应用差异”下发到设备。自动模式下，勾选“配置已更改”后会在保存并应用时进行同步。"
+
+msgid "Networks bind VLAN services to wired ports and optional SSIDs within one template."
+msgstr "网络在同一模板内将 VLAN 业务绑定到有线端口和可选 SSID。"
+
+msgid "No problems were found by the local configuration checks. Use Check to see the backend result after Save & Apply."
+msgstr "本地配置检查未发现问题。请在保存并应用后使用“检查”查看后端结果。"
+
+msgid "ONU IDs 0 through %s are reserved. Save & Apply, then restart FTTR for the change to take effect."
+msgstr "ONU ID 0 至 %s 为保留。请保存并应用，然后重启 FTTR 使更改生效。"
+
+msgid "Optional for wired-only networks. Only SSIDs from the selected template are listed. Changing the template clears the SSID selection."
+msgstr "纯有线网络可选。仅列出所选模板中的 SSID。更改模板会清空 SSID 选择。"
+
+msgid "Repairs are staged in LuCI. Close this dialog, use Save & Apply, then run Check again to verify the applied configuration."
+msgstr "修复操作在 LuCI 中暂存。请关闭此对话框，保存并应用，然后再次运行“检查”以核验已生效的配置。"
+
+msgid "Reserves ONU IDs 0 through count − 1. Restart FTTR to apply; this does not guarantee concurrent ONU capacity."
+msgstr "保留 ONU ID 0 至 count − 1。需重启 FTTR 生效；这并不保证并发 ONU 容量。"
+
+msgid "Reserves this interface by optical serial number, even while offline. Changes take effect after restarting FTTR; Reload does not move registered devices."
+msgstr "即使离线也按光序列号保留此接口。更改需重启 FTTR 生效；重载不会迁移已注册设备。"
+
+msgid "Saved custom values are retained when Connection Requests are disabled or backend defaults are selected. Leave these fields unchanged to preserve their saved values."
+msgstr "当禁用连接请求或选择后端默认值时，已保存的自定义值会被保留。请保持这些字段不变以保留其已保存值。"
+
+msgid "Select at least one of INTERNET, OTHER, IPTV, and VOIP for each custom VLAN. TR069 is reserved for OMCI."
+msgstr "每个自定义 VLAN 请至少选择 INTERNET、OTHER、IPTV、VOIP 中的一项。TR069 保留给 OMCI 使用。"
+
+msgid "Select how ACS settings are established. Bootstrap runs independently, including when business provisioning is disabled or uses MQTT."
+msgstr "选择 ACS 设置的建立方式。Bootstrap 独立运行，即使业务下发被禁用或使用 MQTT 也是如此。"
+
+msgid "Select the transport and contract for business configuration. None disables business delivery only. ACS uses current CWMP reachability; bootstrap status is shown separately. Candidate contracts require discovery and verified write support."
+msgstr "选择业务配置的传输方式和契约。None 仅禁用业务下发。ACS 使用当前 CWMP 可达性；bootstrap 状态单独显示。候选契约需要发现和已核验的写入支持。"
+
+msgid "The local ACS binds to this address. The child ACS URL is generated from this address, the ACS port and CWMP path."
+msgstr "本地 ACS 绑定到此地址。子 ACS URL 由此地址、ACS 端口和 CWMP 路径生成。"
+
+msgid "This SSID is bound to a network. Remove its network bindings before changing the template."
+msgstr "此 SSID 已绑定到网络。更改模板前请先移除其网络绑定。"
+
+msgid "This also deletes the template's SSIDs and networks. Templates used by groups cannot be deleted."
+msgstr "这也会删除该模板的 SSID 和网络。被分组使用的模板无法删除。"
+
+msgid "This removes the device's FTTR configuration and stops managing it. It does not delete the physical device."
+msgstr "这会移除设备的 FTTR 配置并停止管理，不会删除物理设备。"
+
+msgid "This removes the selected configuration entry. Existing reference checks and binding cleanup still apply."
+msgstr "这会移除所选配置项。现有的引用检查和绑定清理仍然适用。"
+
+msgid "Uses a backend-reserved profile; factory credentials are not yet verified. Disable to enter this CPE's existing credentials and port. Saved custom values are retained while hidden."
+msgstr "使用后端保留的配置；工厂凭据尚未核验。禁用后可输入此 CPE 现有的凭据和端口。隐藏时已保存的自定义值会被保留。"
+
+msgid "Counters describe the last completed 15-minute PM interval, not live or cumulative traffic."
+msgstr "计数器表示最近一个已完成的 15 分钟性能监测周期，不是实时或累计流量。"
+
+msgid "Global counters cannot be attributed to a selected ONU. FPGA BCH readings are separate from ONU FEC PM. Grant bandwidth units are unverified."
+msgstr "全局计数器无法归属到所选 ONU。FPGA BCH 读数与 ONU FEC 性能监测相互独立。授权带宽单位尚未核验。"
+
+msgid "Identity information is read-only and limited to fields provided by fttrctl status."
+msgstr "身份信息为只读，且仅限 fttrctl status 提供的字段。"
+
+msgid "Live transceiver measurements are not supported by this platform. Module identity and PHY rates remain available."
+msgstr "本平台不支持光模块实时测量。模块标识和 PHY 速率仍可用。"
+
+msgid "No continuous baseline. Deltas are withheld until daemon and hardware context continuity can be verified."
+msgstr "没有连续基线。在无法核验守护进程和硬件上下文连续性之前，不显示增量值。"
+
+msgid "Read-only observed register diagnostics. Sampling is limited to 120 samples and 60 seconds; it stops when this panel becomes inactive."
+msgstr "只读的寄存器观测诊断。采样上限为 120 个样本和 60 秒；此面板不活动时停止采样。"
+
+msgid "This is a lightweight preview. Download JSON to save the complete MIB snapshot."
+msgstr "这是轻量预览。下载 JSON 可保存完整的 MIB 快照。"
+
+msgid "# Enter shell commands to execute on the selected sub-gateway (Ctrl + Enter to execute)..."
+msgstr "# 输入要在所选子网关上执行的 shell 命令（Ctrl + Enter 执行）..."
+
+msgid "Execution outcome is unknown. Timeout does not cancel the remote command; do not automatically retry."
+msgstr "执行结果未知。超时不会取消远端命令，请勿自动重试。"
+
+msgid "Inspect read-only MQTT source reports and diagnostics for unbound or unselected devices."
+msgstr "查看未绑定或未选中设备的只读 MQTT 源报告和诊断信息。"
+
+msgid "Password writes are accepted and saved by the device; this does not prove web login permission. Existing permission masks are preserved."
+msgstr "密码写入已被设备接受并保存；这并不证明 Web 登录权限。现有权限掩码会被保留。"
+
+msgid "Shell executes on the selected ONU. Timeout does not cancel execution. Raw output can contain secrets."
+msgstr "Shell 在所选 ONU 上执行。超时不会取消执行。原始输出可能包含敏感信息。"
+
+msgid "This optical device has no fresh, unambiguous MQTT binding. Commands are unavailable."
+msgstr "此光设备没有最新且明确的 MQTT 绑定，命令不可用。"
+
+msgid "Controls GPON downstream 1490 nm optical emission. Turning it off removes the downstream optical signal and disconnects ONUs."
+msgstr "控制 GPON 下联 1490 nm 光发射。关闭会移除下联光信号并断开所有 ONU。"
+
+msgid "Controls GPON downstream FEC encoding. When downstream transmission is enabled, ONU-side OMCI FEC performance monitoring is also enabled."
+msgstr "控制 GPON 下联 FEC 编码。当下联发射启用时，ONU 侧 OMCI FEC 性能监测也会启用。"
+
+msgid "Controls GPON downstream frame transmission. Turning it off stops ONU communication without resetting the optical module."
+msgstr "控制 GPON 下联帧发送。关闭会停止 ONU 通信，但不复位光模块。"
+
+msgid "Controls optical module reset and ONU discovery. Turning it off resets the module and disconnects all ONUs."
+msgstr "控制光模块复位和 ONU 发现。关闭会复位模块并断开所有 ONU。"
+
+msgid "Controls the optical hardware owner and ONU discovery. Turning it off disables GPON transmission and disconnects all ONUs; it does not reset the optical module."
+msgstr "控制光硬件所有权和 ONU 发现。关闭会禁用 GPON 发送并断开所有 ONU；不会复位光模块。"
+
+msgid "This saves the configuration only. The current allocation stays unchanged until FTTR is restarted."
+msgstr "此操作仅保存配置。当前分配保持不变，直到重启 FTTR。"
+
+msgid "Admission allows eligible traffic to bind; it does not prove that packets are currently hardware-forwarded. The switch controls FTTR bridge and WAN admission, not the entire NPU or firewall offloading for other interfaces."
+msgstr "准入允许符合条件的流量绑定；并不证明数据包当前正由硬件转发。此开关控制 FTTR 桥和 WAN 的准入，并非整个 NPU 或其他接口的防火墙卸载。"
+
+msgid "Backend reliability metadata is unavailable. Update fttrctl before trusting these readings."
+msgstr "后端可靠性元数据不可用。请更新 fttrctl 后再信任这些读数。"
+
+msgid "Configuration saved. Waiting for driver admission readback; enabling may take several seconds and requires eligible ports and firewall policy."
+msgstr "配置已保存。正在等待驱动准入回读；启用可能需要数秒，并要求符合条件的端口和防火墙策略。"
+
+msgid "Counters cover only currently bound flows and may decrease when flows expire. Driver-exported zeroes are not proof of no traffic. AN7581 native L2B counters are unavailable; — means unavailable, not zero."
+msgstr "计数器仅覆盖当前已绑定的流，流过期时可能减少。驱动导出的零值并不证明无流量。AN7581 原生 L2B 计数器不可用；“—”表示不可用，而非零。"
+
+msgid "Flow table is unavailable. A failed read must not be interpreted as an empty table."
+msgstr "流表不可用。读取失败不得解读为空表。"
+
+msgid "Save returned success, but configuration readback could not be confirmed. Refresh before retrying."
+msgstr "保存返回成功，但无法确认配置回读。请刷新后再重试。"
+
+msgid "Source: PPE debugfs bind/entries and driver sysfs. These are global PPE snapshots, not FTTR-only totals or table capacity. Reads are sequential, not atomic."
+msgstr "来源：PPE debugfs bind/entries 和驱动 sysfs。这些是全局 PPE 快照，并非仅 FTTR 的总量或表容量。读取是顺序的，非原子操作。"
+
+msgid "Use a bridge interface name of 1–15 letters, digits, dots, underscores or hyphens."
+msgstr "桥接口名称使用 1–15 个字母、数字、点、下划线或连字符。"
+
+msgid "WAN directions require software and hardware flow offloading in the firewall settings. Saving here does not change those global settings."
+msgstr "WAN 方向需要在防火墙设置中启用软件和硬件流卸载。在此保存不会更改那些全局设置。"
+
+msgid "Authorizes recovery of the child ACS settings after management drift or service restart. Business synchronization uses its own transport readiness."
+msgstr "授权在管理漂移或服务重启后恢复子 ACS 设置。业务同步使用其自身的传输就绪状态。"
+
+msgid "Clear old tasks and managed-object records after a device factory reset. The next preview or apply reads the device again."
+msgstr "设备恢复出厂后清除旧任务和受管对象记录。下次预览或应用会重新读取设备。"
+
+msgid "Committed configuration has not been requested for loading. Apply the configuration to load it."
+msgstr "尚未请求加载已提交的配置。请应用配置以加载它。"
+
+msgid "Read current device parameters and auto-verify matching settings without writing to device"
+msgstr "读取设备当前参数并自动核验匹配的设置，不写入设备"
+
+msgid "Saving in manual mode does not create interfaces, change firewall rules or configure child devices. Apply explicitly to authorize the current management configuration."
+msgstr "手动模式下保存不会创建接口、更改防火墙规则或配置子设备。请显式应用以授权当前管理配置。"
+
+msgid "Synchronization state reset for %s. Preview differences to read the current device state."
+msgstr "已重置 %s 的同步状态。请预览差异以读取设备当前状态。"
+
+msgid "Auto-refresh: %s s"
+msgstr "自动刷新：%s 秒"
+
+msgid "Downstream port %s"
+msgstr "下联端口 %s"
+
+msgid "FTTR PON topology"
+msgstr "FTTR PON 拓扑"
+
+msgid "FTTR topology"
+msgstr "FTTR 拓扑"
+
+msgid "Interface"
+msgstr "接口"
+
+msgid "Link"
+msgstr "链路"
+
+msgid "OLT controller"
+msgstr "OLT 控制器"
+
+msgid "PON links from the OLT controller to each active downstream port"
+msgstr "从 OLT 控制器到各活动下联端口的 PON 链路"
+
+msgid "Port %s"
+msgstr "端口 %s"
+
+msgid "Port count follows the bridged ports reported by the controller"
+msgstr "端口数量以控制器上报的桥接端口为准"
+
+msgid "Reserved: %s"
+msgstr "保留：%s"
+
+msgid "Speed"
+msgstr "速率"
+
+msgid "Updated"
+msgstr "更新时间"
+
+msgid "known ONUs"
+msgstr "已知 ONU"
+
+msgid "ports"
+msgstr "端口"
+
+msgid "registered"
+msgstr "已注册"
