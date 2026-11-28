@@ -4033,3 +4033,81 @@ msgstr "通配（*）"
 
 msgid "Wildcard (any valid path)"
 msgstr "通配（任意合法路径）"
+
+msgid "Downstream device"
+msgstr "下联设备"
+
+msgid "Emergency stop"
+msgstr "紧急停止"
+
+msgid "FEC"
+msgstr "FEC 纠错"
+
+msgid "FPGA status"
+msgstr "FPGA 状态"
+
+msgid "Initial"
+msgstr "初始"
+
+msgid "Issues"
+msgstr "异常"
+
+msgid "LOID"
+msgstr "LOID"
+
+msgid "Laser bias"
+msgstr "激光偏置电流"
+
+msgid "Links"
+msgstr "链路"
+
+msgid "Management"
+msgstr "管理"
+
+msgid "No topology data available. Is the FTTR daemon running?"
+msgstr "暂无拓扑数据。FTTR 守护进程是否在运行？"
+
+msgid "Nominal capacity"
+msgstr "标称容量"
+
+msgid "OLT"
+msgstr "OLT 控制器"
+
+msgid "Optical & link"
+msgstr "光链路"
+
+msgid "PON mode"
+msgstr "PON 模式"
+
+msgid "RX power"
+msgstr "接收光功率"
+
+msgid "Ranging"
+msgstr "测距"
+
+msgid "Serial number"
+msgstr "序列号"
+
+msgid "System"
+msgstr "系统"
+
+msgid "TX enabled"
+msgstr "发射已启用"
+
+msgid "Topology issues"
+msgstr "拓扑异常"
+
+msgid "Topology refresh failed: %s"
+msgstr "拓扑刷新失败：%s"
+
+msgid "Uplinks"
+msgstr "上行链路"
+
+msgid "Upstream rate"
+msgstr "上行速率"
+
+msgid "Vendor / model"
+msgstr "厂商 / 型号"
+
+msgid "Wavelength TX/RX"
+msgstr "发射/接收波长"
