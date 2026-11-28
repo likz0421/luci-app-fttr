@@ -3778,3 +3778,258 @@ msgstr "端口"
 
 msgid "registered"
 msgstr "已注册"
+
+msgid "Accepted CWMP POST paths"
+msgstr "允许的 CWMP POST 路径"
+
+msgid "Access mode"
+msgstr "接入模式"
+
+msgid "ACS redirect rules (FTTR ONUs)"
+msgstr "ACS 重定向规则（FTTR ONU）"
+
+msgid "Active"
+msgstr "已启用"
+
+msgid "Active rules"
+msgstr "生效规则"
+
+msgid "Address evidence"
+msgstr "地址证据"
+
+msgid "Address origin"
+msgstr "地址来源"
+
+msgid "Advertise isolated management gateway (DHCP Option 3)"
+msgstr "下发隔离管理网关（DHCP Option 3）"
+
+msgid "All online FTTR ONUs (fttrN / br-tr069)"
+msgstr "全部在线 FTTR ONU（fttrN / br-tr069）"
+
+msgid "All online FTTR ONUs (scope-filtered)"
+msgstr "全部在线 FTTR ONU（按作用域）"
+
+msgid "Arbitrary-IP ACS hijack & redirect"
+msgstr "任意 IP ACS 劫持重定向"
+
+msgid "Both (fttrN + br-tr069)"
+msgstr "同时启用（fttrN + br-tr069）"
+
+msgid "Bridge / LAN (fttrN port)"
+msgstr "桥接 / LAN 侧（fttrN 端口）"
+
+msgid "Bridge MAC"
+msgstr "网桥 MAC"
+
+msgid "Bridge-mode MQTT access"
+msgstr "桥接模式 MQTT 定向接入"
+
+msgid "Broker"
+msgstr "Broker"
+
+msgid "Checking"
+msgstr "检查中"
+
+msgid "CIDR host bits must be zero (e.g. 10.20.30.0/24)."
+msgstr "CIDR 主机位必须为 0（例如 10.20.30.0/24）。"
+
+msgid "CIDR prefix must be between 1 and 32."
+msgstr "CIDR 前缀长度必须在 1 至 32 之间。"
+
+msgid "Cleanup failed"
+msgstr "清理失败"
+
+msgid "Client"
+msgstr "客户端"
+
+msgid "Client IPv4"
+msgstr "客户端 IPv4"
+
+msgid "Client MAC"
+msgstr "客户端 MAC"
+
+msgid "CWMP path matching"
+msgstr "CWMP 路径匹配"
+
+msgid "CWMP POST path"
+msgstr "CWMP POST 路径"
+
+msgid "Default only"
+msgstr "仅默认路径"
+
+msgid "Denied"
+msgstr "已拒绝"
+
+msgid "Direct"
+msgstr "直连"
+
+msgid "Direct (verified)"
+msgstr "直连（已验证）"
+
+msgid "Enable arbitrary-IP ACS hijack & redirect"
+msgstr "启用任意 IP ACS 劫持重定向"
+
+msgid "Enable bridge-mode MQTT redirect"
+msgstr "启用桥接模式 MQTT 重定向"
+
+msgid "Enable rule"
+msgstr "启用规则"
+
+msgid "Enter a valid IPv4 address."
+msgstr "请输入有效的 IPv4 地址。"
+
+msgid "Enter an IPv4 address or CIDR prefix (e.g. 10.0.0.1 or 10.20.30.0/24)."
+msgstr "请输入 IPv4 地址或 CIDR 网段（例如 10.0.0.1 或 10.20.30.0/24）。"
+
+msgid "Evidence / Telemetry"
+msgstr "证据 / 遥测"
+
+msgid "Exact"
+msgstr "精确路径"
+
+msgid "Exact path must not contain whitespace, query, fragment, backslash, or '..'."
+msgstr "精确路径不能包含空白字符、查询参数、片段标记、反斜杠或 '..'。"
+
+msgid "Exact path must start with '/' (or enter '*' explicitly for wildcard)."
+msgstr "精确路径必须以 '/' 开头（或显式输入 '*' 表示通配）。"
+
+msgid "Exact path only"
+msgstr "仅精确路径"
+
+msgid "Exact path: %s"
+msgstr "精确路径：%s"
+
+msgid "Explicit wildcard (* — any valid path)"
+msgstr "显式通配（* — 任意合法路径）"
+
+msgid "FSL RX register snapshots"
+msgstr "FSL 接收寄存器快照"
+
+msgid "Global"
+msgstr "全局"
+
+msgid "High (> -3 dBm; normal -8 to -27 dBm)"
+msgstr "过高（> -3 dBm；正常 -8 至 -27 dBm）"
+
+msgid "High RX power"
+msgstr "收光过高"
+
+msgid "Invalid CIDR prefix length."
+msgstr "无效的 CIDR 前缀长度。"
+
+msgid "Invalid IPv4 or CIDR format."
+msgstr "无效的 IPv4 或 CIDR 格式。"
+
+msgid "LAN ACS listener"
+msgstr "LAN 侧 ACS 监听"
+
+msgid "LAN origin"
+msgstr "LAN 地址来源"
+
+msgid "Local NAT (direct)"
+msgstr "本地 NAT（直连）"
+
+msgid "Management ACS listener"
+msgstr "管理网 ACS 监听"
+
+msgid "Management gateway (Option 3)"
+msgstr "管理网关下发（Option 3）"
+
+msgid "Master LAN DHCP (NAT)"
+msgstr "主路由 LAN DHCP（NAT）"
+
+msgid "Missing path (edit required)"
+msgstr "缺少路径（需编辑补全）"
+
+msgid "nftables redirect rules"
+msgstr "nftables 重定向规则"
+
+msgid "No redirect rule"
+msgstr "无重定向规则"
+
+msgid "Not applicable"
+msgstr "不适用"
+
+msgid "Optical port"
+msgstr "光口接口"
+
+msgid "Original ACS target"
+msgstr "原始 ACS 目标"
+
+msgid "Redirect ACS target"
+msgstr "重定向 ACS 目标"
+
+msgid "Redirect installed"
+msgstr "已安装重定向"
+
+msgid "Redirect target"
+msgstr "重定向目标"
+
+msgid "Rule"
+msgstr "规则"
+
+msgid "Rule installed"
+msgstr "规则已安装"
+
+msgid "Rule name"
+msgstr "规则名称"
+
+msgid "Scope"
+msgstr "生效作用域"
+
+msgid "Scope & FTTR ONUs"
+msgstr "作用域与 FTTR ONU"
+
+msgid "Skipped"
+msgstr "已跳过"
+
+msgid "Switch"
+msgstr "开关"
+
+msgid "Target ACS IPv4 / CIDR"
+msgstr "目标 ACS IPv4 / CIDR"
+
+msgid "Target broker"
+msgstr "目标 Broker"
+
+msgid "Target FTTR ONU"
+msgstr "目标 FTTR ONU"
+
+msgid "Target TCP port"
+msgstr "目标 TCP 端口"
+
+msgid "Telemetry unverified"
+msgstr "遥测未验证"
+
+msgid "Telemetry verified"
+msgstr "遥测已验证"
+
+msgid "TR069 management (br-tr069)"
+msgstr "TR069 管理网（br-tr069）"
+
+msgid "Trial cooldown"
+msgstr "试探冷却中"
+
+msgid "Trial redirect (15s)"
+msgstr "试探重定向（15 秒）"
+
+msgid "Upstream DHCP (Bridge)"
+msgstr "上游 DHCP（桥接）"
+
+msgid "Upstream gateway"
+msgstr "上游网关"
+
+msgid "Waiting broker"
+msgstr "等待 Broker"
+
+msgid "Waiting evidence"
+msgstr "等待证据"
+
+msgid "Waiting optical"
+msgstr "等待光口就绪"
+
+msgid "Wildcard (*)"
+msgstr "通配（*）"
+
+msgid "Wildcard (any valid path)"
+msgstr "通配（任意合法路径）"
